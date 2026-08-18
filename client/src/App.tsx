@@ -16,8 +16,8 @@ import Admin from "./pages/Admin";
 import { StoreProvider } from "./contexts/StoreContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
 
-
 function Router() {
+  // make sure to consider if you need authentication for certain routes
   return (
     <Switch>
       <Route path={"/"} component={Home} />
