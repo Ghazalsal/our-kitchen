@@ -1,11 +1,12 @@
 /** Copperline Atelier shell: editorial navigation, quiet notification signals, and a practical mobile escape route. */
 import { useMemo, useState } from "react";
-import { Bell, ChefHat, Menu, Search, ShoppingBag, X } from "lucide-react";
+import { Bell, ChefHat, Menu, Search, ShoppingBag, UserRound, X } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useStore } from "@/contexts/StoreContext";
 import { CartDrawer } from "./CartDrawer";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { formatILS } from "@/lib/money";
+import { useAuth } from "@/contexts/AuthContext";
 
 const mark = "/manus-storage/our-kitchen-app-icon_ce4e2e34.png";
 
@@ -27,6 +28,7 @@ export function StorefrontShell({ children }: { children: React.ReactNode }) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [search, setSearch] = useState("");
   const { state, cartCount, markNotificationsRead } = useStore();
+  const { user } = useAuth();
   const [, setLocation] = useLocation();
   const unseen = state.notifications.filter((item) => item.audience === "customer" && !item.read).length;
   const results = useMemo(() => search.trim() ? state.products.filter((item) => `${item.name} ${item.brand} ${item.categoryId}`.toLowerCase().includes(search.toLowerCase())).slice(0, 4) : [], [search, state.products]);
@@ -51,6 +53,7 @@ export function StorefrontShell({ children }: { children: React.ReactNode }) {
           <LanguageToggle />
           <button onClick={() => setSearchOpen(true)} className="inline-flex h-10 w-10 items-center justify-center transition hover:bg-[#F1E9DD]" aria-label="Search the shop"><Search size={19} /></button>
           <button onClick={() => { markNotificationsRead("customer"); setLocation("/track"); }} className="relative inline-flex h-10 w-10 items-center justify-center transition hover:bg-[#F1E9DD]" aria-label="View customer notifications"><Bell size={18} />{unseen > 0 && <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-[#C0632D]" />}</button>
+          <Link href={user ? "/account" : "/login"} className="inline-flex h-10 w-10 items-center justify-center transition hover:bg-[#F1E9DD]" aria-label={user ? "Open your account" : "Sign in or create an account"}><UserRound size={18} /></Link>
           <button onClick={() => setCartOpen(true)} className="relative inline-flex h-10 items-center gap-2 px-2 text-xs font-bold uppercase tracking-[0.12em] transition hover:bg-[#F1E9DD]" aria-label="Open cart"><ShoppingBag size={18} /><span className="hidden sm:inline">Bag</span>{cartCount > 0 && <span className="grid h-5 w-5 place-items-center rounded-full bg-[#C0632D] text-[9px] text-white">{cartCount}</span>}</button>
         </div>
       </div>
@@ -72,7 +75,7 @@ function Footer() {
   return <footer className="border-t border-[#3D3127] bg-[#17130F] text-[#FAF6F0]">
     <div className="container grid gap-10 py-12 md:grid-cols-[1.5fr_1fr_1fr_1.25fr]">
       <div><Wordmark dark /><p className="mt-5 max-w-xs text-sm leading-6 text-[#CDBFB2]">Considered tools for the well-used kitchen. Chosen for their work, not their noise.</p><Link href="/admin" className="mt-5 inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.16em] text-[#D9A441] hover:text-white"><ChefHat size={13} /> Atelier desk</Link></div>
-      <div><p className="eyebrow !text-[#D9A441]">The counter</p><div className="mt-4 grid gap-3 text-sm text-[#E8DCD1]"><Link href="/shop">All appliances</Link><Link href="/deals">Copper deals</Link><Link href="/track">Track your order</Link></div></div>
+      <div><p className="eyebrow !text-[#D9A441]">The counter</p><div className="mt-4 grid gap-3 text-sm text-[#E8DCD1]"><Link href="/shop">All appliances</Link><Link href="/deals">Copper deals</Link><Link href="/track">Track your order</Link><Link href="/account">Your account</Link></div></div>
       <div><p className="eyebrow !text-[#D9A441]">Assistance</p><div className="mt-4 grid gap-3 text-sm text-[#E8DCD1]"><a href="#care">Care & repairs</a><a href="#delivery">Delivery notes</a><a href="#contact">Talk to the kitchen</a></div></div>
       <div><p className="eyebrow !text-[#D9A441]">A note from the counter</p><p className="mt-4 text-sm leading-6 text-[#E8DCD1]">Quiet product notes, useful recipes and occasional copper savings.</p><div className="mt-4 flex border-b border-[#6A5543] pb-2"><input className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-[#9D8B7C]" placeholder="Your email" /><button className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#D9A441]">Join</button></div></div>
     </div>

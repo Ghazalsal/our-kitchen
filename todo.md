@@ -55,3 +55,19 @@
 - [x] Replace dollar-formatted monetary displays with locale-aware Israeli shekel (ILS) formatting.
 - [x] Apply ILS formatting to product, cart, checkout, order-tracking, and admin values.
 - [x] Verify pricing and discount calculations display correctly in ILS.
+
+## Secure Customer and Admin Authentication
+
+- [x] Define Laravel customer and administrator roles with secure session-based authentication.
+- [x] Add customer registration, login, email verification, and protected account access.
+- [x] Add verified password-reset requests and password-update flows with expiry and rate limiting.
+- [x] Replace the admin passcode gate with a role-restricted administrator login and protected admin API access.
+- [x] Configure environment-backed mail handling with a safe development log transport for verification and password recovery.
+- [x] Verify customer registration, email verification, reset-password request, and administrator authorization flows end to end.
+- [x] Protect checkout on both client and server with a signed-in, email-verified customer account requirement.
+- [x] Add the confirmation-gated `kitchen:promote-admin` operator command and administrator operations documentation.
+
+## Local Mail Validation
+
+- [x] Configure Laravel’s local mail log for safe development validation of verification and password-reset messages.
+- [x] Keep production email delivery environment-driven and document the provider handoff required for real inbox delivery.

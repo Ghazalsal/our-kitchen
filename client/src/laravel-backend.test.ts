@@ -5,19 +5,57 @@ const root = "/home/ubuntu/our-kitchen";
 const read = (path: string) => readFileSync(`${root}/${path}`, "utf8");
 
 describe("Laravel commerce backend", () => {
-  it("registers the persistent customer, admin, and media API routes", () => {
+  it("registers the persistent customer, session-auth, admin, and media API routes", () => {
     const routes = read("laravel/routes/api.php");
     expect(routes).toContain("/store/bootstrap");
-    expect(routes).toContain("/admin/unlock");
+    expect(routes).toContain("prefix('auth')");
+    expect(routes).toContain("Route::post('/register'");
+    expect(routes).toContain("Route::post('/login'");
+    expect(routes).toContain("Route::post('/password/reset'");
     expect(routes).toContain("/orders");
     expect(routes).toContain("/media");
+    expect(routes).toContain("middleware('web')");
   });
 
-  it("protects administrative mutations and persists product media metadata", () => {
+  it("protects verified customer orders and administrator mutations", () => {
     const controller = read("laravel/app/Http/Controllers/StoreApiController.php");
+    const store = read("client/src/contexts/StoreContext.tsx");
+    const checkout = read("client/src/pages/Checkout.tsx");
     expect(controller).toContain("requireAdmin");
+    expect(controller).toContain("requireVerifiedUser");
+    expect(controller).toContain("hasVerifiedEmail()");
+    expect(store).toContain('await laravelRequest<Order>("/orders", "POST", { order })');
+    expect(store).toContain("orders: [confirmed");
+    expect(checkout).toContain("Your cart has been kept intact");
     expect(controller).toContain("kitchen_media_files");
     expect(controller).toContain("v1/storage/presign/put");
+  });
+
+  it("uses rate-limited secure account endpoints with database-backed cache support", () => {
+    const auth = read("laravel/app/Http/Controllers/AuthController.php");
+    const cacheMigration = read("laravel/database/migrations/0001_01_01_000001_create_cache_table.php");
+    expect(auth).toContain("RateLimiter::tooManyAttempts");
+    expect(auth).toContain("Hash::make");
+    expect(auth).toContain("Password::sendResetLink");
+    expect(auth).toContain("email:rfc");
+    expect(cacheMigration).toContain("Schema::create('cache'");
+    expect(cacheMigration).toContain("Schema::create('cache_locks'");
+  });
+
+  it("provides a confirmation-gated operational path for admin promotion", () => {
+    const command = read("laravel/app/Console/Commands/PromoteKitchenAdmin.php");
+    const operations = read("ADMIN_OPERATIONS.md");
+    expect(command).toContain("kitchen:promote-admin");
+    expect(command).toContain("$this->confirm");
+    expect(command).toContain("role' => 'admin'");
+    expect(operations).toContain("MAIL_FROM_ADDRESS");
+  });
+
+  it("keeps reset email and token together through the storefront redirect", () => {
+    const routes = read("laravel/routes/web.php");
+    const account = read("client/src/pages/Account.tsx");
+    expect(routes).toContain("request('email')");
+    expect(account).toContain('query.get("email")');
   });
 
   it("uses the TiDB-safe commerce tables in the Laravel migration", () => {
@@ -49,5 +87,14 @@ describe("Laravel commerce backend", () => {
       expect(source).toContain("formatILS");
       expect(source).not.toMatch(/\$[0-9]/);
     });
+  });
+
+  it("keeps transactional email credentials in environment-backed Laravel configuration", () => {
+    const mail = read("laravel/config/mail.php");
+    expect(mail).toContain("env('MAIL_MAILER'");
+    expect(mail).toContain("env('MAIL_HOST'");
+    expect(mail).toContain("env('MAIL_USERNAME'");
+    expect(mail).toContain("env('MAIL_PASSWORD'");
+    expect(mail).toContain("env('MAIL_FROM_ADDRESS'");
   });
 });

@@ -2,8 +2,16 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\StoreApiController;
+use App\Http\Controllers\AuthController;
 
 Route::get('/manus-storage/{key}', [StoreApiController::class, 'serveMedia'])->where('key', '.*');
+
+Route::get('/verify-email/{id}/{hash}', [AuthController::class, 'verifyEmail'])
+    ->middleware(['signed', 'throttle:6,1'])
+    ->name('verification.verify');
+
+Route::get('/reset-password/{token}', fn (string $token) => redirect('/reset-password?token='.urlencode($token).'&email='.urlencode((string) request('email'))))
+    ->name('password.reset');
 
 Route::get('/manifest.webmanifest', function () {
     $manifest = public_path('manifest.webmanifest');

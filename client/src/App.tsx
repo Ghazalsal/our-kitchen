@@ -13,8 +13,10 @@ import Checkout from "./pages/Checkout";
 import Track from "./pages/Track";
 import Deals from "./pages/Deals";
 import Admin from "./pages/Admin";
+import { Account, ForgotPassword, Login, Register, ResetPassword } from "./pages/Account";
 import { StoreProvider } from "./contexts/StoreContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
+import { AuthProvider } from "./contexts/AuthContext";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -27,6 +29,11 @@ function Router() {
       <Route path={"/checkout"} component={Checkout} />
       <Route path={"/track"} component={Track} />
       <Route path={"/deals"} component={Deals} />
+      <Route path={"/login"} component={Login} />
+      <Route path={"/register"} component={Register} />
+      <Route path={"/forgot-password"} component={ForgotPassword} />
+      <Route path={"/reset-password"} component={ResetPassword} />
+      <Route path={"/account"} component={Account} />
       <Route path={"/admin"} component={Admin} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
@@ -47,14 +54,16 @@ function App() {
         defaultTheme="light"
         // switchable
       >
-        <LanguageProvider>
+        <AuthProvider>
+          <LanguageProvider>
           <StoreProvider>
             <TooltipProvider>
               <Toaster richColors position="top-right" />
               <Router />
             </TooltipProvider>
           </StoreProvider>
-        </LanguageProvider>
+          </LanguageProvider>
+        </AuthProvider>
       </ThemeProvider>
     </ErrorBoundary>
   );
