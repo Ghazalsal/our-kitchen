@@ -1,3 +1,4 @@
+/** Copperline Atelier routing: shopper pages inhabit the editorial shell; admin remains a focused workspace. */
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
@@ -5,12 +6,27 @@ import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
+import Shop from "./pages/Shop";
+import ProductDetail from "./pages/ProductDetail";
+import Cart from "./pages/Cart";
+import Checkout from "./pages/Checkout";
+import Track from "./pages/Track";
+import Deals from "./pages/Deals";
+import Admin from "./pages/Admin";
+import { StoreProvider } from "./contexts/StoreContext";
 
 
 function Router() {
   return (
     <Switch>
       <Route path={"/"} component={Home} />
+      <Route path={"/shop"} component={Shop} />
+      <Route path={"/product/:id"} component={ProductDetail} />
+      <Route path={"/cart"} component={Cart} />
+      <Route path={"/checkout"} component={Checkout} />
+      <Route path={"/track"} component={Track} />
+      <Route path={"/deals"} component={Deals} />
+      <Route path={"/admin"} component={Admin} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
@@ -30,10 +46,12 @@ function App() {
         defaultTheme="light"
         // switchable
       >
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-        </TooltipProvider>
+        <StoreProvider>
+          <TooltipProvider>
+            <Toaster richColors position="top-right" />
+            <Router />
+          </TooltipProvider>
+        </StoreProvider>
       </ThemeProvider>
     </ErrorBoundary>
   );
