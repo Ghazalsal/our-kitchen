@@ -71,3 +71,10 @@
 
 - [x] Configure Laravel’s local mail log for safe development validation of verification and password-reset messages.
 - [x] Keep production email delivery environment-driven and document the provider handoff required for real inbox delivery.
+
+## Separate Administrator Sign-in Experience
+
+- [x] Add a dedicated `/admin/login` route and administrator-specific sign-in page.
+- [x] Keep customer sign-in and registration on customer-only account routes.
+- [x] Route authorized administrators to `/admin` and explain role restrictions without exposing a shared credential.
+- [x] Verify the distinct customer and administrator sign-in journeys with regression coverage.

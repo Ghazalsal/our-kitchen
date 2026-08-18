@@ -13,7 +13,7 @@ import Checkout from "./pages/Checkout";
 import Track from "./pages/Track";
 import Deals from "./pages/Deals";
 import Admin from "./pages/Admin";
-import { Account, ForgotPassword, Login, Register, ResetPassword } from "./pages/Account";
+import { Account, AdminLogin, ForgotPassword, Login, Register, ResetPassword } from "./pages/Account";
 import { StoreProvider } from "./contexts/StoreContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -34,6 +34,7 @@ function Router() {
       <Route path={"/forgot-password"} component={ForgotPassword} />
       <Route path={"/reset-password"} component={ResetPassword} />
       <Route path={"/account"} component={Account} />
+      <Route path={"/admin/login"} component={AdminLogin} />
       <Route path={"/admin"} component={Admin} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}

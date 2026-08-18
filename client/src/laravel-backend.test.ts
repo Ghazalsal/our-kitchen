@@ -51,6 +51,16 @@ describe("Laravel commerce backend", () => {
     expect(operations).toContain("MAIL_FROM_ADDRESS");
   });
 
+  it("keeps administrator sign-in distinct from customer account routes", () => {
+    const app = read("client/src/App.tsx");
+    const account = read("client/src/pages/Account.tsx");
+    const admin = read("client/src/pages/Admin.tsx");
+    expect(app).toContain('path={"/admin/login"}');
+    expect(account).toContain("Administrator sign in.");
+    expect(account).toContain("signedIn.role !== \"admin\"");
+    expect(admin).toContain('href="/admin/login"');
+  });
+
   it("keeps reset email and token together through the storefront redirect", () => {
     const routes = read("laravel/routes/web.php");
     const account = read("client/src/pages/Account.tsx");
