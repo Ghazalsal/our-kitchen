@@ -31,3 +31,9 @@
 ## Full-stack Upgrade Regression
 
 - [x] Remove the undefined `useAuth` reference that is preventing the storefront home page from rendering.
+
+## Application Icon Update
+
+- [x] Retrieve the supplied image and prepare it as a web-safe application icon.
+- [x] Apply the icon as the browser favicon and Our Kitchen storefront brand mark.
+- [x] Verify the updated icon presentation before delivery.

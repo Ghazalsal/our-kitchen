@@ -6,11 +6,11 @@ import { useStore } from "@/contexts/StoreContext";
 import { CartDrawer } from "./CartDrawer";
 import { useLanguage } from "@/contexts/LanguageContext";
 
-const mark = "/manus-storage/our-kitchen-mark_293ce769.png";
+const mark = "/manus-storage/our-kitchen-app-icon_ce4e2e34.png";
 
 export function Wordmark({ dark = false }: { dark?: boolean }) {
   return <Link href="/" className={`group inline-flex items-center gap-2.5 ${dark ? "text-[#FAF6F0]" : "text-[#17130F]"}`}>
-    <img src={mark} alt="" className="h-9 w-9 object-contain transition duration-200 group-hover:rotate-6" />
+    <img src={mark} alt="Our Kitchen" className={`h-10 w-10 rounded-full object-contain transition duration-200 group-hover:rotate-6 ${dark ? "ring-1 ring-[#6A5543]" : "ring-1 ring-[#E6D7C7]"}`} />
     <span className="leading-none"><b className="block font-['Fraunces'] text-xl tracking-[-0.05em]">Our</b><span className="block pt-0.5 text-[8px] font-bold uppercase tracking-[0.28em]">Kitchen</span></span>
   </Link>;
 }
