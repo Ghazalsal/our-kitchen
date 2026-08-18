@@ -5,6 +5,13 @@ use App\Http\Controllers\StoreApiController;
 
 Route::get('/manus-storage/{key}', [StoreApiController::class, 'serveMedia'])->where('key', '.*');
 
+Route::get('/manifest.webmanifest', function () {
+    $manifest = public_path('manifest.webmanifest');
+    if (!is_file($manifest)) $manifest = base_path('../dist/public/manifest.webmanifest');
+    abort_unless(is_file($manifest), 404);
+    return response()->file($manifest, ['Content-Type' => 'application/manifest+json; charset=utf-8']);
+});
+
 Route::get('/assets/{asset}', function (string $asset) {
     $path = public_path('assets/'.$asset);
     if (!is_file($path)) $path = base_path('../dist/public/assets/'.$asset);

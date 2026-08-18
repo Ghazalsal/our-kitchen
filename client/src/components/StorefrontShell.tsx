@@ -5,6 +5,7 @@ import { Link, useLocation } from "wouter";
 import { useStore } from "@/contexts/StoreContext";
 import { CartDrawer } from "./CartDrawer";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { formatILS } from "@/lib/money";
 
 const mark = "/manus-storage/our-kitchen-app-icon_ce4e2e34.png";
 
@@ -32,7 +33,7 @@ export function StorefrontShell({ children }: { children: React.ReactNode }) {
 
   return <div className="min-h-screen overflow-x-hidden bg-[#FAF6F0] pb-16 text-[#17130F] md:pb-0">
     <div className="relative z-40 overflow-hidden bg-[#17130F] py-2 text-center text-[10px] font-bold uppercase tracking-[0.17em] text-[#FAF6F0]">
-      <div className="animate-[pulse_4s_ease-in-out_infinite]">Copper hours: complimentary delivery over $300 <span className="mx-3 text-[#D9A441]">✦</span> The counter is open</div>
+      <div className="animate-[pulse_4s_ease-in-out_infinite]">Copper hours: complimentary delivery over {formatILS(300)} <span className="mx-3 text-[#D9A441]">✦</span> The counter is open</div>
     </div>
     <header className="sticky top-0 z-40 border-b border-[#E6D7C7] bg-[#FAF6F0]/95 backdrop-blur-xl">
       <div className="container flex h-[76px] items-center justify-between gap-4">
@@ -61,7 +62,7 @@ export function StorefrontShell({ children }: { children: React.ReactNode }) {
     {searchOpen && <div className="fixed inset-0 z-50 bg-[#17130F]/50 p-4 backdrop-blur-sm" onClick={() => setSearchOpen(false)}>
       <div className="mx-auto mt-20 max-w-2xl bg-[#FFFDF9] p-5 shadow-2xl" onClick={(event) => event.stopPropagation()}>
         <div className="flex items-center gap-3 border-b border-[#E6D7C7] pb-3"><Search size={18} /><input autoFocus value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search the counter…" className="w-full bg-transparent text-lg outline-none placeholder:text-[#8B7D70]" /><button onClick={() => setSearchOpen(false)} aria-label="Close search"><X size={18} /></button></div>
-        <div className="pt-3">{results.length ? results.map((item) => <button key={item.id} onClick={() => { setSearchOpen(false); setLocation(`/product/${item.id}`); }} className="flex w-full items-center gap-3 border-b border-[#F1E9DD] py-3 text-left last:border-0 hover:text-[#C0632D]"><img src={item.image} alt="" className="h-12 w-12 object-cover" /><span><b className="block font-['Fraunces']">{item.name}</b><small className="uppercase tracking-[0.14em]">{item.brand} · ${item.price}</small></span></button>) : <p className="py-8 text-sm text-[#73675E]">Name an appliance, a maker or a kitchen ritual.</p>}</div>
+        <div className="pt-3">{results.length ? results.map((item) => <button key={item.id} onClick={() => { setSearchOpen(false); setLocation(`/product/${item.id}`); }} className="flex w-full items-center gap-3 border-b border-[#F1E9DD] py-3 text-left last:border-0 hover:text-[#C0632D]"><img src={item.image} alt="" className="h-12 w-12 object-cover" /><span><b className="block font-['Fraunces']">{item.name}</b><small className="uppercase tracking-[0.14em]">{item.brand} · {formatILS(item.price)}</small></span></button>) : <p className="py-8 text-sm text-[#73675E]">Name an appliance, a maker or a kitchen ritual.</p>}</div>
       </div>
     </div>}
   </div>;

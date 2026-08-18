@@ -37,3 +37,21 @@
 - [x] Retrieve the supplied image and prepare it as a web-safe application icon.
 - [x] Apply the icon as the browser favicon and Our Kitchen storefront brand mark.
 - [x] Verify the updated icon presentation before delivery.
+
+## Web-app Manifest
+
+- [x] Generate 192 px and 512 px installable icon assets from the supplied Our Kitchen logo.
+- [x] Add a web-app manifest with the correct brand metadata and icon declarations.
+- [x] Connect and verify the manifest in the storefront document head.
+
+## Manifest Delivery Verification
+
+- [x] Verify the supplied icon in the storefront header and footer brand marks.
+- [x] Verify the favicon, app manifest, and multi-size icon URLs resolve from the browser metadata.
+- [ ] Save and synchronize the verified web-app manifest update to GitHub.
+
+## Israeli Shekel Currency
+
+- [x] Replace dollar-formatted monetary displays with locale-aware Israeli shekel (ILS) formatting.
+- [x] Apply ILS formatting to product, cart, checkout, order-tracking, and admin values.
+- [x] Verify pricing and discount calculations display correctly in ILS.

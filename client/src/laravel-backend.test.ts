@@ -26,4 +26,28 @@ describe("Laravel commerce backend", () => {
     expect(migration).toContain("kitchen_products");
     expect(migration).toContain("kitchen_orders");
   });
+
+  it("serves an installable multi-size web-app manifest", () => {
+    const manifest = read("client/public/manifest.webmanifest");
+    const routes = read("laravel/routes/web.php");
+    expect(manifest).toContain("our-kitchen-icon-192");
+    expect(manifest).toContain("our-kitchen-icon-512");
+    expect(manifest).toContain('"display": "standalone"');
+    expect(routes).toContain("/manifest.webmanifest");
+  });
+
+  it("uses the ILS formatter across customer and admin money surfaces", () => {
+    const files = [
+      "client/src/pages/Cart.tsx",
+      "client/src/pages/Checkout.tsx",
+      "client/src/pages/Track.tsx",
+      "client/src/pages/Admin.tsx",
+      "client/src/components/ProductCard.tsx",
+    ];
+    files.forEach((path) => {
+      const source = read(path);
+      expect(source).toContain("formatILS");
+      expect(source).not.toMatch(/\$[0-9]/);
+    });
+  });
 });
