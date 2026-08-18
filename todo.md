@@ -25,7 +25,7 @@
 ## Laravel Delivery Validation
 
 - [x] Run and confirm a protected admin product, coupon, order-status, and message workflow against the persistent database.
-- [ ] Verify the Dockerized Laravel runtime serves the compiled React storefront, API routes, and media routes.
+- [x] Verify the Dockerized Laravel runtime serves the compiled React storefront, API routes, and media routes.
 - [x] Remove obsolete Node API startup paths so Laravel is the sole backend runtime.
 
 ## Full-stack Upgrade Regression

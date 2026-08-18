@@ -1,0 +1,10 @@
+node_modules
+laravel/vendor
+dist
+.git
+.manus-logs
+coverage
+*.log
+*.bak
+webdev-static-assets
+client/public
