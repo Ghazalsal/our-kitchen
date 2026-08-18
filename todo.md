@@ -48,7 +48,7 @@
 
 - [x] Verify the supplied icon in the storefront header and footer brand marks.
 - [x] Verify the favicon, app manifest, and multi-size icon URLs resolve from the browser metadata.
-- [ ] Save and synchronize the verified web-app manifest update to GitHub.
+- [x] Save and synchronize the verified web-app manifest update to GitHub.
 
 ## Israeli Shekel Currency
 
