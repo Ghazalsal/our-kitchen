@@ -4,6 +4,7 @@ import { Bell, ChefHat, Menu, Search, ShoppingBag, X } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useStore } from "@/contexts/StoreContext";
 import { CartDrawer } from "./CartDrawer";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const mark = "/manus-storage/our-kitchen-mark_293ce769.png";
 
@@ -12,6 +13,12 @@ export function Wordmark({ dark = false }: { dark?: boolean }) {
     <img src={mark} alt="" className="h-9 w-9 object-contain transition duration-200 group-hover:rotate-6" />
     <span className="leading-none"><b className="block font-['Fraunces'] text-xl tracking-[-0.05em]">Our</b><span className="block pt-0.5 text-[8px] font-bold uppercase tracking-[0.28em]">Kitchen</span></span>
   </Link>;
+}
+
+export function LanguageToggle({ dark = false }: { dark?: boolean }) {
+  const { language, setLanguage } = useLanguage();
+  const surface = dark ? "border-[#6A5543] text-[#FAF6F0]" : "border-[#D7C6B6] text-[#17130F]";
+  return <div className={`flex items-center border ${surface}`} aria-label="Language switcher"><button onClick={() => setLanguage("en")} className={`px-2 py-1 text-[9px] font-bold uppercase tracking-[0.12em] ${language === "en" ? "bg-[#C0632D] text-white" : ""}`}>EN</button><button onClick={() => setLanguage("ar")} className={`px-2 py-1 text-[10px] font-bold ${language === "ar" ? "bg-[#C0632D] text-white" : ""}`}>ع</button></div>;
 }
 
 export function StorefrontShell({ children }: { children: React.ReactNode }) {
@@ -40,6 +47,7 @@ export function StorefrontShell({ children }: { children: React.ReactNode }) {
           <a href="#journal" className="transition hover:text-[#C0632D]">Journal</a>
         </nav>
         <div className="flex items-center justify-end gap-1 lg:w-[32%]">
+          <LanguageToggle />
           <button onClick={() => setSearchOpen(true)} className="inline-flex h-10 w-10 items-center justify-center transition hover:bg-[#F1E9DD]" aria-label="Search the shop"><Search size={19} /></button>
           <button onClick={() => { markNotificationsRead("customer"); setLocation("/track"); }} className="relative inline-flex h-10 w-10 items-center justify-center transition hover:bg-[#F1E9DD]" aria-label="View customer notifications"><Bell size={18} />{unseen > 0 && <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-[#C0632D]" />}</button>
           <button onClick={() => setCartOpen(true)} className="relative inline-flex h-10 items-center gap-2 px-2 text-xs font-bold uppercase tracking-[0.12em] transition hover:bg-[#F1E9DD]" aria-label="Open cart"><ShoppingBag size={18} /><span className="hidden sm:inline">Bag</span>{cartCount > 0 && <span className="grid h-5 w-5 place-items-center rounded-full bg-[#C0632D] text-[9px] text-white">{cartCount}</span>}</button>

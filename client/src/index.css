@@ -129,3 +129,12 @@
   .reveal { animation: rise-in 0.55s cubic-bezier(0.23, 1, 0.32, 1) both; }
   @keyframes rise-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
 }
+
+/* Copperline Arabic: preserve the atelier hierarchy while letting Arabic read naturally from the right. */
+html[dir="rtl"] body { font-family: "Noto Sans Arabic", "Karla", sans-serif; }
+html[dir="rtl"] h1, html[dir="rtl"] h2, html[dir="rtl"] h3, html[dir="rtl"] h4 { font-family: "Noto Sans Arabic", "Fraunces", serif; font-weight: 600; letter-spacing: 0; }
+html[dir="rtl"] .eyebrow { letter-spacing: 0.05em; }
+html[dir="rtl"] .stamp { letter-spacing: 0.04em; }
+html[dir="rtl"] .container { text-align: right; }
+html[dir="rtl"] input, html[dir="rtl"] textarea, html[dir="rtl"] select { text-align: right; }
+html[dir="rtl"] .rtl-flip { transform: scaleX(-1); }

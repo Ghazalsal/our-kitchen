@@ -14,6 +14,7 @@ import Track from "./pages/Track";
 import Deals from "./pages/Deals";
 import Admin from "./pages/Admin";
 import { StoreProvider } from "./contexts/StoreContext";
+import { LanguageProvider } from "./contexts/LanguageContext";
 
 
 function Router() {
@@ -46,12 +47,14 @@ function App() {
         defaultTheme="light"
         // switchable
       >
-        <StoreProvider>
-          <TooltipProvider>
-            <Toaster richColors position="top-right" />
-            <Router />
-          </TooltipProvider>
-        </StoreProvider>
+        <LanguageProvider>
+          <StoreProvider>
+            <TooltipProvider>
+              <Toaster richColors position="top-right" />
+              <Router />
+            </TooltipProvider>
+          </StoreProvider>
+        </LanguageProvider>
       </ThemeProvider>
     </ErrorBoundary>
   );
