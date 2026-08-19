@@ -122,3 +122,17 @@
 - [x] Make email verification optional for registration and checkout while retaining the underlying signed verification flow.
 - [x] Add a documented configuration setting to re-enable mandatory verification when transactional email is connected.
 - [x] Verify unverified customers can register and complete protected checkout while administrator role access remains unchanged.
+
+## Customer Phone Verification Authentication
+
+- [x] Select Twilio Verify as the SMS verification provider and secure credential model for customer one-time codes.
+- [ ] Confirm the selected provider supports reliable delivery to Palestinian mobile numbers and document any country-code or registration constraints.
+- [ ] Securely configure the Twilio Account SID, Auth Token, and Verify Service SID.
+- [ ] Add phone-number identity and expiring one-time-code persistence while preserving the separate email/password administrator route.
+- [ ] Build phone-number customer registration and sign-in screens with resend cooldown and accessible code entry.
+- [ ] Verify rate limits, code expiry, customer session creation, and administrator access separation.
+
+## Palestinian SMS Gateway Comparison
+
+- [x] Compare reputable SMS verification gateways with documented Palestinian mobile delivery considerations.
+- [x] Identify practical trial tests and provider-selection criteria before phone authentication is enabled.
