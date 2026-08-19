@@ -23,14 +23,15 @@ type AuthContextValue = {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 const cookie = (name: string) => document.cookie.split("; ").find((item) => item.startsWith(`${name}=`))?.slice(name.length + 1);
+const csrfToken = () => { const value = cookie("XSRF-TOKEN"); try { return value ? decodeURIComponent(value) : undefined; } catch { return undefined; } };
+const refreshCsrf = () => fetch("/api/auth/csrf", { credentials: "same-origin", cache: "no-store" });
 
 export async function laravelRequest<T>(path: string, method = "GET", body?: unknown): Promise<T> {
-  if (method !== "GET") await fetch("/api/auth/csrf", { credentials: "same-origin" });
-  const headers: Record<string, string> = { Accept: "application/json" };
-  if (body !== undefined) headers["Content-Type"] = "application/json";
-  const token = cookie("XSRF-TOKEN");
-  if (token) headers["X-XSRF-TOKEN"] = decodeURIComponent(token);
-  const response = await fetch(`/api${path}`, { method, headers, credentials: "same-origin", body: body === undefined ? undefined : JSON.stringify(body) });
+  const mutation = method !== "GET";
+  if (mutation) await refreshCsrf();
+  const send = () => { const headers: Record<string, string> = { Accept: "application/json" }; if (body !== undefined) headers["Content-Type"] = "application/json"; const token = csrfToken(); if (token) headers["X-XSRF-TOKEN"] = token; return fetch(`/api${path}`, { method, headers, credentials: "same-origin", body: body === undefined ? undefined : JSON.stringify(body) }); };
+  let response = await send();
+  if (mutation && response.status === 419) { await refreshCsrf(); response = await send(); }
   const data = await response.json().catch(() => ({})) as T & { message?: string; errors?: Record<string, string[]> };
   if (!response.ok) throw new Error(data.message ?? Object.values(data.errors ?? {}).flat().join(" ") ?? "Something went wrong.");
   return data;

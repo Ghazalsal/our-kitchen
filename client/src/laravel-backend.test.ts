@@ -72,6 +72,15 @@ describe("Laravel commerce backend", () => {
     expect(account.match(/<PasswordInput/g)?.length).toBe(6);
   });
 
+  it("refreshes and retries one stale CSRF token without weakening mutation protection", () => {
+    const auth = read("client/src/contexts/AuthContext.tsx");
+    expect(auth).toContain('fetch("/api/auth/csrf"');
+    expect(auth).toContain('cache: "no-store"');
+    expect(auth).toContain("response.status === 419");
+    expect(auth).toContain("await refreshCsrf(); response = await send();");
+    expect(auth).toContain('headers["X-XSRF-TOKEN"] = token');
+  });
+
   it("keeps reset email and token together through the storefront redirect", () => {
     const routes = read("laravel/routes/web.php");
     const account = read("client/src/pages/Account.tsx");

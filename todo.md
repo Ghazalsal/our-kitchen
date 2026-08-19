@@ -90,3 +90,9 @@
 - [x] Verify password controls preserve form behavior and render clearly on desktop and mobile.
 - [x] Validate password visibility controls on customer and administrator forms at a mobile viewport.
 - [x] Add regression coverage for the toggle button behavior and non-submit semantics.
+
+## Registration CSRF Reliability
+
+- [x] Diagnose the reported CSRF token mismatch during customer registration.
+- [x] Correct the browser/Laravel CSRF session flow without weakening request protection.
+- [x] Verify a browser-equivalent registration request succeeds with persistent session authentication.
