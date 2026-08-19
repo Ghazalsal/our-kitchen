@@ -102,3 +102,23 @@
 - [x] Diagnose the reported CSRF token mismatch during administrator sign-in.
 - [x] Correct the administrator authentication flow without weakening CSRF protection.
 - [x] Verify administrator login succeeds with a fresh CSRF token and administrator role session.
+
+## Arabic-first Experience and Image Optimization Guidance
+
+- [x] Make Arabic the default interface language for new Our Kitchen visitors while keeping English available.
+- [x] Verify Arabic-first RTL layout and language switching across storefront and administrator screens.
+- [x] Document a scalable external image optimization pipeline for large product catalogs.
+- [x] Verify Arabic-to-English and English-to-Arabic resolution preserves the selected language across navigation through unit tests.
+- [x] Confirm explicit English selection renders LTR correctly after Arabic-first initialization.
+- [x] Verify language preference persistence through storefront and administrator route resolution after a language choice.
+
+## Customer Verification Email Delivery
+
+- [x] Confirm customer registration generates a signed Laravel verification message in the local mail log.
+- [x] Verify the configured development mail destination and document the requirement for real inbox delivery.
+
+## Optional Email Verification Rollout
+
+- [x] Make email verification optional for registration and checkout while retaining the underlying signed verification flow.
+- [x] Add a documented configuration setting to re-enable mandatory verification when transactional email is connected.
+- [x] Verify unverified customers can register and complete protected checkout while administrator role access remains unchanged.

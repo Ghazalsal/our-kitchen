@@ -43,11 +43,12 @@ class AuthController extends Controller
             'role' => 'customer',
         ]);
 
-        event(new Registered($user));
+        $emailVerificationRequired = (bool) config('kitchen.require_email_verification');
+        if ($emailVerificationRequired) event(new Registered($user));
         Auth::login($user);
         $request->session()->regenerate();
 
-        return response()->json(['user' => $this->payload($user), 'message' => 'Check your email for the verification link.'], 201);
+        return response()->json(['user' => $this->payload($user), 'message' => $emailVerificationRequired ? 'Check your email for the verification link.' : 'Your account is ready.'], 201);
     }
 
     public function login(Request $request): JsonResponse
@@ -86,6 +87,7 @@ class AuthController extends Controller
         /** @var User|null $user */
         $user = $request->user();
         abort_unless($user, 401, 'Please sign in first.');
+        if (!config('kitchen.require_email_verification')) return response()->json(['message' => 'Email verification is not required at the moment.']);
         if ($user->hasVerifiedEmail()) return response()->json(['message' => 'Your email is already verified.']);
         $key = 'verify:'.$user->id;
         if (RateLimiter::tooManyAttempts($key, 3)) abort(429, 'Please wait before requesting another verification email.');
@@ -130,6 +132,6 @@ class AuthController extends Controller
 
     private function payload(User $user): array
     {
-        return ['id' => $user->id, 'name' => $user->name, 'email' => $user->email, 'role' => $user->role, 'emailVerified' => $user->hasVerifiedEmail()];
+        return ['id' => $user->id, 'name' => $user->name, 'email' => $user->email, 'role' => $user->role, 'emailVerified' => $user->hasVerifiedEmail(), 'emailVerificationRequired' => (bool) config('kitchen.require_email_verification')];
     }
 }

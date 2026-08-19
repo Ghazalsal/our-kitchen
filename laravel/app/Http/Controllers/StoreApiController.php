@@ -92,10 +92,10 @@ class StoreApiController extends Controller
 
     public function createOrder(Request $request): JsonResponse
     {
-        $user = $this->requireVerifiedUser($request);
+        $user = config('kitchen.require_email_verification') ? $this->requireVerifiedUser($request) : $this->requireUser($request);
         $order = array_merge($request->input('order', $request->all()), ['customerName' => $user->name, 'customerEmail' => $user->email]);
         validator($order, ['id' => ['required', 'string', 'max:80'], 'customerName' => ['required', 'string'], 'customerEmail' => ['required', 'email'], 'address' => ['required', 'string'], 'lines' => ['required', 'array', 'min:1'], 'total' => ['required', 'numeric']])->validate();
-        DB::transaction(function () use ($order) {
+        DB::transaction(function () use ($order, $user) {
             DB::table('kitchen_orders')->updateOrInsert(['id' => $order['id']], [
                 'user_id' => $user->id, 'createdAt' => $order['createdAt'] ?? now(), 'status' => $order['status'] ?? 'placed', 'customerName' => $order['customerName'], 'customerEmail' => $order['customerEmail'], 'address' => $order['address'], 'subtotal' => $order['subtotal'] ?? 0, 'discount' => $order['discount'] ?? 0, 'shipping' => $order['shipping'] ?? 0, 'total' => $order['total'], 'couponCode' => $order['couponCode'] ?? null, 'updated_at' => now(), 'created_at' => now(),
             ]);

@@ -17,12 +17,17 @@ describe("Laravel commerce backend", () => {
     expect(routes).toContain("middleware('web')");
   });
 
-  it("protects verified customer orders and administrator mutations", () => {
+  it("keeps customer order verification configurable while protecting administrator mutations", () => {
     const controller = read("laravel/app/Http/Controllers/StoreApiController.php");
+    const kitchen = read("laravel/config/kitchen.php");
     const store = read("client/src/contexts/StoreContext.tsx");
     const checkout = read("client/src/pages/Checkout.tsx");
     expect(controller).toContain("requireAdmin");
     expect(controller).toContain("requireVerifiedUser");
+    expect(controller).toContain("config('kitchen.require_email_verification')");
+    expect(controller).toContain("DB::transaction(function () use ($order, $user)");
+    expect(kitchen).toContain("KITCHEN_REQUIRE_EMAIL_VERIFICATION");
+    expect(kitchen).toContain("env('KITCHEN_REQUIRE_EMAIL_VERIFICATION', false)");
     expect(controller).toContain("hasVerifiedEmail()");
     expect(store).toContain('await laravelRequest<Order>("/orders", "POST", { order })');
     expect(store).toContain("orders: [confirmed");
@@ -85,6 +90,24 @@ describe("Laravel commerce backend", () => {
     expect(controller).toContain("'token' => $request->session()->token()");
   });
 
+  it("defaults new visitors to Arabic while preserving an explicit language choice", () => {
+    const language = read("client/src/contexts/LanguageContext.tsx");
+    const translations = read("client/src/lib/i18n.ts");
+    expect(language).toContain('const LANGUAGE_PREFERENCE_KEY = "our-kitchen-language-preference"');
+    expect(language).toContain('preference === "ar" || preference === "en" ? preference : "ar"');
+    expect(language).toContain("saveLanguagePreference(localStorage, next)");
+    expect(translations).toContain('"Administrator sign in.": "تسجيل دخول المدير."');
+    expect(translations).toContain('"Open atelier desk": "افتح مكتب الورشة"');
+  });
+
+  it("documents an external, responsive image optimization pipeline for large catalogs", () => {
+    const pipeline = read("IMAGE_OPTIMIZATION_PIPELINE.md");
+    expect(pipeline).toContain("Managed S3/object storage");
+    expect(pipeline).toContain("WebP/AVIF");
+    expect(pipeline).toContain("srcset");
+    expect(pipeline).toContain("Never store user image bytes directly in TiDB");
+  });
+
   it("keeps reset email and token together through the storefront redirect", () => {
     const routes = read("laravel/routes/web.php");
     const account = read("client/src/pages/Account.tsx");
@@ -130,5 +153,15 @@ describe("Laravel commerce backend", () => {
     expect(mail).toContain("env('MAIL_USERNAME'");
     expect(mail).toContain("env('MAIL_PASSWORD'");
     expect(mail).toContain("env('MAIL_FROM_ADDRESS'");
+  });
+
+  it("keeps the signed verification flow available but disables it by default until mail delivery is connected", () => {
+    const auth = read("laravel/app/Http/Controllers/AuthController.php");
+    const account = read("client/src/pages/Account.tsx");
+    const rollout = read("EMAIL_VERIFICATION_ROLLOUT.md");
+    expect(auth).toContain("if ($emailVerificationRequired) event(new Registered($user))");
+    expect(auth).toContain("emailVerificationRequired");
+    expect(account).toContain("user.emailVerificationRequired && !user.emailVerified");
+    expect(rollout).toContain("KITCHEN_REQUIRE_EMAIL_VERIFICATION=true");
   });
 });

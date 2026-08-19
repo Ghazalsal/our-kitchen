@@ -6,6 +6,17 @@ export type Language = "en" | "ar";
 type LanguageContextValue = { language: Language; setLanguage: (language: Language) => void; toggleLanguage: () => void };
 const LanguageContext = createContext<LanguageContextValue | null>(null);
 const LANGUAGE_KEY = "our-kitchen-language";
+const LANGUAGE_PREFERENCE_KEY = "our-kitchen-language-preference";
+
+export function resolveInitialLanguage(search: string, preference: string | null): Language {
+  const requested = new URLSearchParams(search).get("lang");
+  if (requested === "ar" || requested === "en") return requested;
+  return preference === "ar" || preference === "en" ? preference : "ar";
+}
+
+export function saveLanguagePreference(storage: Pick<Storage, "setItem">, language: Language) {
+  storage.setItem(LANGUAGE_PREFERENCE_KEY, language);
+}
 
 function translateRoot(root: ParentNode, language: Language) {
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
@@ -30,8 +41,7 @@ function translateRoot(root: ParentNode, language: Language) {
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [language, setLanguage] = useState<Language>(() => {
-    const requested = new URLSearchParams(window.location.search).get("lang");
-    return requested === "ar" || (!requested && localStorage.getItem(LANGUAGE_KEY) === "ar") ? "ar" : "en";
+    return resolveInitialLanguage(window.location.search, localStorage.getItem(LANGUAGE_PREFERENCE_KEY));
   });
   useEffect(() => {
     localStorage.setItem(LANGUAGE_KEY, language);
@@ -50,7 +60,8 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     observer.observe(document.body, { childList: true, characterData: true, subtree: true });
     return () => { cancelAnimationFrame(frame); observer.disconnect(); };
   }, [language]);
-  return <LanguageContext.Provider value={{ language, setLanguage, toggleLanguage: () => setLanguage((current) => current === "en" ? "ar" : "en") }}>{children}</LanguageContext.Provider>;
+  const chooseLanguage = (next: Language) => { saveLanguagePreference(localStorage, next); setLanguage(next); };
+  return <LanguageContext.Provider value={{ language, setLanguage: chooseLanguage, toggleLanguage: () => chooseLanguage(language === "en" ? "ar" : "en") }}>{children}</LanguageContext.Provider>;
 }
 
 export function useLanguage() {

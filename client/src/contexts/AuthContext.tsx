@@ -6,6 +6,7 @@ export type KitchenUser = {
   email: string;
   role: "customer" | "admin";
   emailVerified: boolean;
+  emailVerificationRequired: boolean;
 };
 
 type AuthContextValue = {
