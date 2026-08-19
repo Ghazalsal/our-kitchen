@@ -136,3 +136,13 @@
 
 - [x] Compare reputable SMS verification gateways with documented Palestinian mobile delivery considerations.
 - [x] Identify practical trial tests and provider-selection criteria before phone authentication is enabled.
+
+## Dorsha Kitchenware Expansion
+
+- [x] Add Dorsha as a catalog maker with initial spoon/cutlery, cup, plate, and serving categories.
+- [x] Add an initial persistent Dorsha kitchenware assortment without user-generated reviews or ratings.
+- [x] Feature the expanded kitchenware category discovery on the customer homepage.
+- [x] Verify category filtering, persistent catalog data, and responsive homepage presentation.
+- [x] Ensure homepage category links preserve their query selection in the shop filter.
+- [x] Verify the applied shop query-sync implementation initializes and updates category selection from the current URL.
+- [x] Confirm homepage category-link regression coverage and run the full test/type-check suite.

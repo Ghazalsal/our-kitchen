@@ -108,6 +108,27 @@ describe("Laravel commerce backend", () => {
     expect(pipeline).toContain("Never store user image bytes directly in TiDB");
   });
 
+  it("seeds Dorsha kitchenware categories and features the maker on the customer homepage", () => {
+    const seed = read("client/src/lib/seed.ts");
+    const home = read("client/src/pages/Home.tsx");
+    const translations = read("client/src/lib/i18n.ts");
+    expect(seed).toContain('brand: "Dorsha"');
+    expect(seed).toContain('id: "dorsha-cups"');
+    expect(seed).toContain('id: "dorsha-plates"');
+    expect(seed).toContain('id: "dorsha-cutlery"');
+    expect(seed).toContain('id: "dorsha-serve"');
+    expect(home).toContain('product.brand === "Dorsha"');
+    expect(home).toContain("Shop Dorsha tableware");
+    expect(translations).toContain('"Cups & mugs": "أكواب ومجّات"');
+  });
+
+  it("preserves a homepage category link in the shop filter", () => {
+    const shop = read("client/src/pages/Shop.tsx");
+    expect(shop).toContain('new URLSearchParams(window.location.search).get("category")');
+    expect(shop).toContain("[location]");
+    expect(shop).toContain("setCategory");
+  });
+
   it("keeps reset email and token together through the storefront redirect", () => {
     const routes = read("laravel/routes/web.php");
     const account = read("client/src/pages/Account.tsx");

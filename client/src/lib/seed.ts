@@ -9,12 +9,20 @@ const kettle = "/manus-storage/our-kitchen-kettle_ceb87d69.jpg";
 const blender = "/manus-storage/our-kitchen-blender_8d88c11f.jpg";
 const grill = "/manus-storage/our-kitchen-grill_c38febf9.jpg";
 const toaster = "/manus-storage/our-kitchen-toaster_5bfd81c0.jpg";
+const dorshaServing = "/manus-storage/dorsha-serving-bowl_6af95bde.webp";
+const dorshaCups = "/manus-storage/dorsha-cups-bowls_37c3f7bb.jpeg";
+const dorshaPlates = "/manus-storage/dorsha-plates_c109b6df.jpg";
+const dorshaCutlery = "/manus-storage/dorsha-cutlery_7ca62216.jpg";
 
 export const categories: Category[] = [
   { id: "brew", name: "Brew & pour", description: "Coffee, tea and the unhurried cup.", image: espresso, hue: "copper" },
   { id: "prepare", name: "Prepare", description: "Process, slice and make every prep count.", image: prep, hue: "brass" },
   { id: "bake", name: "Bake & roast", description: "Countertop heat for daily rituals.", image: baking, hue: "ink" },
   { id: "mix", name: "Mix & make", description: "The reliable workhorse for dough and batter.", image: hero, hue: "cream" },
+  { id: "dorsha-cups", name: "Cups & mugs", description: "Dorsha pieces for the first pour and the long pause.", image: dorshaCups, hue: "cream" },
+  { id: "dorsha-plates", name: "Plates & bowls", description: "Tableware made to make the everyday meal feel set.", image: dorshaPlates, hue: "brass" },
+  { id: "dorsha-cutlery", name: "Spoons & cutlery", description: "The small, useful pieces that finish a place setting.", image: dorshaCutlery, hue: "ink" },
+  { id: "dorsha-serve", name: "Serve & share", description: "Generous bowls and platters for a table with room for more.", image: dorshaServing, hue: "copper" },
 ];
 
 export const products: Product[] = [
@@ -73,6 +81,34 @@ export const products: Product[] = [
     brand: "Flint", price: 119, categoryId: "bake", image: toaster,
     gallery: [toaster, baking, hero], description: "A long-slot toaster for sourdough slices, bagels and the bread worth treating properly.",
     features: ["Four shade settings", "Long-slot design", "Lift-and-look lever", "Crumb tray"], stock: 18, colors: ["Copper", "Oat"],
+  },
+  {
+    id: "dorsha-ember-cup-set",
+    name: "Dorsha Ember Cup Set",
+    brand: "Dorsha", price: 129, compareAt: 149, categoryId: "dorsha-cups", image: dorshaCups,
+    gallery: [dorshaCups, dorshaPlates, dorshaServing], description: "Four tactile stoneware cups with a softly weighted handle and a warm, everyday glaze.",
+    features: ["Set of four", "280ml capacity", "Stoneware body", "Dishwasher-safe"], stock: 24, colors: ["Oat", "Moss"],
+  },
+  {
+    id: "dorsha-quiet-plate-set",
+    name: "Dorsha Quiet Plate Set",
+    brand: "Dorsha", price: 189, categoryId: "dorsha-plates", image: dorshaPlates,
+    gallery: [dorshaPlates, dorshaCups, dorshaCutlery], description: "A six-piece dinner plate set with a low rim and calm, stackable proportions.",
+    features: ["Set of six", "26cm diameter", "Low-rim profile", "Stack-friendly"], stock: 18, colors: ["Milk", "Clay"],
+  },
+  {
+    id: "dorsha-brass-spoon-set",
+    name: "Dorsha Brass Spoon Set",
+    brand: "Dorsha", price: 109, categoryId: "dorsha-cutlery", image: dorshaCutlery,
+    gallery: [dorshaCutlery, dorshaPlates, dorshaServing], description: "Six slim serving and dessert spoons with a warm brushed finish for the daily table.",
+    features: ["Set of six", "Brushed stainless steel", "Dessert and serving size", "Hand-wash recommended"], stock: 31, colors: ["Brass"],
+  },
+  {
+    id: "dorsha-gather-serving-bowl",
+    name: "Dorsha Gather Serving Bowl",
+    brand: "Dorsha", price: 159, categoryId: "dorsha-serve", image: dorshaServing,
+    gallery: [dorshaServing, dorshaCups, dorshaPlates], description: "A generous, hand-finished bowl for salads, fruit, or the center of a table that stays awhile.",
+    features: ["3.2L capacity", "Hand-finished glaze", "Wide sharing profile", "Food-safe stoneware"], stock: 12, colors: ["Terracotta", "Oat"],
   },
 ];
 

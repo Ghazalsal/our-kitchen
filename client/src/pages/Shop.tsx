@@ -1,6 +1,6 @@
 /** Copperline Atelier shop: a precise, filterable catalogue that retains the warmth of the campaign pages. */
 import { SlidersHorizontal, X } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "wouter";
 import { ProductCard } from "@/components/ProductCard";
 import { StorefrontShell } from "@/components/StorefrontShell";
@@ -10,12 +10,13 @@ import { formatILS } from "@/lib/money";
 export default function Shop() {
   const { state } = useStore();
   const [location] = useLocation();
-  const preset = new URLSearchParams(location.split("?")[1]).get("category") ?? "all";
+  const preset = new URLSearchParams(window.location.search).get("category") ?? "all";
   const [category, setCategory] = useState(preset);
   const [brand, setBrand] = useState("all");
   const [price, setPrice] = useState(650);
   const [sort, setSort] = useState("featured");
   const [query, setQuery] = useState("");
+  useEffect(() => { setCategory(new URLSearchParams(window.location.search).get("category") ?? "all"); }, [location]);
   const results = useMemo(() => state.products.filter((product) => (category === "all" || product.categoryId === category) && (brand === "all" || product.brand === brand) && product.price <= price && `${product.name} ${product.brand}`.toLowerCase().includes(query.toLowerCase())).sort((a, b) => sort === "low" ? a.price - b.price : sort === "high" ? b.price - a.price : sort === "name" ? a.name.localeCompare(b.name) : Number(Boolean(b.featured)) - Number(Boolean(a.featured))), [state.products, category, brand, price, sort, query]);
   const brands = Array.from(new Set(state.products.map((product) => product.brand)));
   const reset = () => { setCategory("all"); setBrand("all"); setPrice(650); setSort("featured"); setQuery(""); };
