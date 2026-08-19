@@ -82,3 +82,11 @@
 ## Delivered Feature Inventory
 
 - [x] Compile and deliver a complete organized inventory of the features implemented across the storefront, Laravel backend, security, administration, storage, localization, and operations.
+
+## Password Visibility Controls
+
+- [x] Add accessible show/hide password controls to customer and administrator sign-in fields.
+- [x] Add accessible show/hide controls to registration, confirmation, and password-reset fields.
+- [x] Verify password controls preserve form behavior and render clearly on desktop and mobile.
+- [x] Validate password visibility controls on customer and administrator forms at a mobile viewport.
+- [x] Add regression coverage for the toggle button behavior and non-submit semantics.

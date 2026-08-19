@@ -61,6 +61,17 @@ describe("Laravel commerce backend", () => {
     expect(admin).toContain('href="/admin/login"');
   });
 
+  it("adds accessible password visibility controls to every account password form", () => {
+    const account = read("client/src/pages/Account.tsx");
+    expect(account).toContain("function PasswordInput");
+    expect(account).toContain('aria-label={visible ? "Hide password" : "Show password"}');
+    expect(account).toContain('type={visible ? "text" : "password"}');
+    expect(account).toContain('<button type="button"');
+    expect(account).toContain("setVisible((current) => !current)");
+    expect(account).toContain("<EyeOff");
+    expect(account.match(/<PasswordInput/g)?.length).toBe(6);
+  });
+
   it("keeps reset email and token together through the storefront redirect", () => {
     const routes = read("laravel/routes/web.php");
     const account = read("client/src/pages/Account.tsx");
