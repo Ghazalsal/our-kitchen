@@ -96,3 +96,9 @@
 - [x] Diagnose the reported CSRF token mismatch during customer registration.
 - [x] Correct the browser/Laravel CSRF session flow without weakening request protection.
 - [x] Verify a browser-equivalent registration request succeeds with persistent session authentication.
+
+## Administrator Sign-in CSRF Reliability
+
+- [x] Diagnose the reported CSRF token mismatch during administrator sign-in.
+- [x] Correct the administrator authentication flow without weakening CSRF protection.
+- [x] Verify administrator login succeeds with a fresh CSRF token and administrator role session.

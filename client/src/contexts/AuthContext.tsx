@@ -24,12 +24,13 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 const cookie = (name: string) => document.cookie.split("; ").find((item) => item.startsWith(`${name}=`))?.slice(name.length + 1);
 const csrfToken = () => { const value = cookie("XSRF-TOKEN"); try { return value ? decodeURIComponent(value) : undefined; } catch { return undefined; } };
-const refreshCsrf = () => fetch("/api/auth/csrf", { credentials: "same-origin", cache: "no-store" });
+let sessionCsrfToken: string | undefined;
+const refreshCsrf = async () => { const response = await fetch("/api/auth/csrf", { credentials: "same-origin", cache: "no-store" }); const data = await response.json().catch(() => ({})) as { token?: string }; sessionCsrfToken = data.token; return response; };
 
 export async function laravelRequest<T>(path: string, method = "GET", body?: unknown): Promise<T> {
   const mutation = method !== "GET";
   if (mutation) await refreshCsrf();
-  const send = () => { const headers: Record<string, string> = { Accept: "application/json" }; if (body !== undefined) headers["Content-Type"] = "application/json"; const token = csrfToken(); if (token) headers["X-XSRF-TOKEN"] = token; return fetch(`/api${path}`, { method, headers, credentials: "same-origin", body: body === undefined ? undefined : JSON.stringify(body) }); };
+  const send = () => { const headers: Record<string, string> = { Accept: "application/json" }; if (body !== undefined) headers["Content-Type"] = "application/json"; const token = sessionCsrfToken; if (token) headers["X-CSRF-TOKEN"] = token; const encryptedToken = csrfToken(); if (encryptedToken) headers["X-XSRF-TOKEN"] = encryptedToken; return fetch(`/api${path}`, { method, headers, credentials: "same-origin", body: body === undefined ? undefined : JSON.stringify(body) }); };
   let response = await send();
   if (mutation && response.status === 419) { await refreshCsrf(); response = await send(); }
   const data = await response.json().catch(() => ({})) as T & { message?: string; errors?: Record<string, string[]> };

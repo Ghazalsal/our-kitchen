@@ -17,9 +17,10 @@ use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
-    public function csrf(): JsonResponse
+    public function csrf(Request $request): JsonResponse
     {
-        return response()->json(['success' => true]);
+        $request->session()->regenerateToken();
+        return response()->json(['success' => true, 'token' => $request->session()->token()]);
     }
 
     public function me(Request $request): JsonResponse
