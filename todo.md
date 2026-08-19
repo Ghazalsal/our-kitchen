@@ -78,3 +78,7 @@
 - [x] Keep customer sign-in and registration on customer-only account routes.
 - [x] Route authorized administrators to `/admin` and explain role restrictions without exposing a shared credential.
 - [x] Verify the distinct customer and administrator sign-in journeys with regression coverage.
+
+## Delivered Feature Inventory
+
+- [x] Compile and deliver a complete organized inventory of the features implemented across the storefront, Laravel backend, security, administration, storage, localization, and operations.
