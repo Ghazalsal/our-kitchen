@@ -232,4 +232,21 @@ describe("Laravel commerce backend", () => {
     expect(store).toContain("window.clearInterval(interval)");
     expect(store).toContain("document.removeEventListener(\"visibilitychange\", refreshOnReturn)");
   });
+
+  it("supports customer phone/password access without introducing an unverified SMS-code path", () => {
+    const migration = read("laravel/database/migrations/2026_08_21_000006_add_phone_to_users_table.php");
+    const auth = read("laravel/app/Http/Controllers/AuthController.php");
+    const account = read("client/src/pages/Account.tsx");
+    const context = read("client/src/contexts/AuthContext.tsx");
+    expect(migration).toContain("nullable()->unique()");
+    expect(auth).toContain("normalisePalestinianMobile");
+    expect(auth).toContain("'phone' => ['required'");
+    expect(auth).toContain("'identifier' => ['required'");
+    expect(auth).toContain("'phoneVerified' => false");
+    expect(auth).not.toContain("kitchen_phone_otps");
+    expect(account).toContain("Mobile number");
+    expect(account).toContain("No SMS code is sent at this stage.");
+    expect(account).toContain("identifier: phone");
+    expect(context).toContain("phoneVerified: boolean");
+  });
 });

@@ -128,10 +128,15 @@
 
 - [x] Select Twilio Verify as the SMS verification provider and secure credential model for customer one-time codes.
 - [x] Confirm Twilio Verify Palestinian mobile delivery guidance, +970 and Palestinian +972 mobile-prefix handling, and required Geo Permissions in the provider research document.
-- [ ] Securely configure the Twilio Account SID, Auth Token, and Verify Service SID.
-- [ ] Add phone-number identity and expiring one-time-code persistence while preserving the separate email/password administrator route.
-- [ ] Build phone-number customer registration and sign-in screens with resend cooldown and accessible code entry.
-- [ ] Verify rate limits, code expiry, customer session creation, and administrator access separation.
+- [x] Defer SMS-provider configuration until credentials are available; no real code is generated or accepted without a provider.
+- [x] Defer expiring one-time-code persistence, resend controls, and code-expiry/rate-limit verification until SMS verification is explicitly re-enabled.
+
+## Non-verified Customer Phone Registration
+
+- [x] Add a required normalized and unique Palestinian mobile number to customer identity records without weakening separate administrator authentication.
+- [x] Collect the customer phone number during password-protected registration and allow customer sign-in by saved phone number without sending or accepting a verification code.
+- [x] Display the saved phone number in the customer account view with clear non-verification status while retaining an email address for account recovery.
+- [x] Verify valid Palestinian-format input, duplicate rejection, customer session creation, and administrator access separation.
 
 ## Palestinian SMS Gateway Comparison
 

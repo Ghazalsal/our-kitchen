@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
@@ -30,15 +31,18 @@ class AuthController extends Controller
 
     public function register(Request $request): JsonResponse
     {
+        $request->merge(['phone' => $this->normalisePalestinianMobile((string) $request->input('phone', ''))]);
         $data = $request->validate([
             'name' => ['required', 'string', 'min:2', 'max:160'],
             'email' => ['required', 'string', 'email:rfc', 'max:320', 'unique:users,email'],
+            'phone' => ['required', 'string', 'max:20', 'unique:users,phone'],
             'password' => ['required', 'string', 'min:12', 'confirmed'],
         ]);
 
         $user = User::create([
             'name' => trim($data['name']),
             'email' => strtolower(trim($data['email'])),
+            'phone' => $data['phone'],
             'password' => Hash::make($data['password']),
             'role' => 'customer',
         ]);
@@ -54,13 +58,17 @@ class AuthController extends Controller
     public function login(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'email' => ['required', 'email:rfc'],
+            'identifier' => ['required', 'string', 'max:320'],
             'password' => ['required', 'string'],
         ]);
-        $key = 'login:'.strtolower($data['email']).'|'.$request->ip();
+        $identifier = trim($data['identifier']);
+        $credentials = str_contains($identifier, '@')
+            ? ['email' => strtolower($identifier), 'password' => $data['password']]
+            : ['phone' => $this->normalisePalestinianMobile($identifier), 'password' => $data['password']];
+        $key = 'login:'.strtolower((string) ($credentials['email'] ?? $credentials['phone'])).'|'.$request->ip();
         if (RateLimiter::tooManyAttempts($key, 5)) abort(429, 'Too many sign-in attempts. Please wait a minute and try again.');
 
-        if (!Auth::attempt(['email' => strtolower($data['email']), 'password' => $data['password']])) {
+        if (!Auth::attempt($credentials)) {
             RateLimiter::hit($key, 60);
             abort(422, 'These credentials do not match our records.');
         }
@@ -68,7 +76,8 @@ class AuthController extends Controller
         RateLimiter::clear($key);
         $request->session()->regenerate();
         /** @var User $user */
-        $user = $request->user();
+        $user = Auth::user();
+        abort_unless($user instanceof User, 401, 'Unable to establish a secure session.');
         $user->forceFill(['last_login_at' => now()])->save();
 
         return response()->json(['user' => $this->payload($user)]);
@@ -132,6 +141,17 @@ class AuthController extends Controller
 
     private function payload(User $user): array
     {
-        return ['id' => $user->id, 'name' => $user->name, 'email' => $user->email, 'role' => $user->role, 'emailVerified' => $user->hasVerifiedEmail(), 'emailVerificationRequired' => (bool) config('kitchen.require_email_verification')];
+        return ['id' => $user->id, 'name' => $user->name, 'email' => $user->email, 'phone' => $user->phone, 'phoneVerified' => false, 'role' => $user->role, 'emailVerified' => $user->hasVerifiedEmail(), 'emailVerificationRequired' => (bool) config('kitchen.require_email_verification')];
+    }
+
+    private function normalisePalestinianMobile(string $phone): string
+    {
+        $digits = preg_replace('/\D/', '', trim($phone)) ?? '';
+        if (str_starts_with($digits, '00')) $digits = substr($digits, 2);
+        if (str_starts_with($digits, '0')) $digits = '970'.substr($digits, 1);
+        if (!preg_match('/^(970|972)5\d{8}$/', $digits)) {
+            throw ValidationException::withMessages(['phone' => 'Enter a Palestinian mobile number, for example 059 123 4567 or +970 59 123 4567.']);
+        }
+        return '+'.$digits;
     }
 }

@@ -4,6 +4,8 @@ export type KitchenUser = {
   id: number;
   name: string;
   email: string;
+  phone: string | null;
+  phoneVerified: boolean;
   role: "customer" | "admin";
   emailVerified: boolean;
   emailVerificationRequired: boolean;
@@ -13,8 +15,8 @@ type AuthContextValue = {
   user: KitchenUser | null;
   loading: boolean;
   refresh: () => Promise<KitchenUser | null>;
-  register: (input: { name: string; email: string; password: string; password_confirmation: string }) => Promise<KitchenUser>;
-  login: (input: { email: string; password: string }) => Promise<KitchenUser>;
+  register: (input: { name: string; email: string; phone: string; password: string; password_confirmation: string }) => Promise<KitchenUser>;
+  login: (input: { identifier: string; password: string }) => Promise<KitchenUser>;
   logout: () => Promise<void>;
   resendVerification: () => Promise<string>;
   forgotPassword: (email: string) => Promise<string>;
