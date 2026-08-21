@@ -127,7 +127,7 @@
 ## Customer Phone Verification Authentication
 
 - [x] Select Twilio Verify as the SMS verification provider and secure credential model for customer one-time codes.
-- [ ] Confirm the selected provider supports reliable delivery to Palestinian mobile numbers and document any country-code or registration constraints.
+- [x] Confirm Twilio Verify Palestinian mobile delivery guidance, +970 and Palestinian +972 mobile-prefix handling, and required Geo Permissions in the provider research document.
 - [ ] Securely configure the Twilio Account SID, Auth Token, and Verify Service SID.
 - [ ] Add phone-number identity and expiring one-time-code persistence while preserving the separate email/password administrator route.
 - [ ] Build phone-number customer registration and sign-in screens with resend cooldown and accessible code entry.
@@ -159,3 +159,8 @@
 - [x] Make campaign create, update, and delete wait for Laravel confirmation and roll back the interface when persistence fails.
 - [x] Add behavioral Laravel regression coverage for protected campaign CRUD and time-aware server-side order recalculation.
 - [x] Capture successful authenticated validation of campaign management and campaign-discount order behavior before release.
+
+## Notification Delivery
+
+- [x] Refresh persisted customer and administrator notifications every 30 seconds while an authenticated session is active, without requiring a manual page reload.
+- [x] Add regression coverage for notification polling lifecycle, authenticated role scoping, and persisted-state reconciliation.

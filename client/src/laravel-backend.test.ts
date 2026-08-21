@@ -216,4 +216,20 @@ describe("Laravel commerce backend", () => {
     expect(checkout).toContain("campaign.campaign.name");
     expect(checkout).not.toContain("if (!user.emailVerified)");
   });
+
+  it("polls only authenticated, role-scoped persisted activity every 30 seconds", () => {
+    const routes = read("laravel/routes/api.php");
+    const controller = read("laravel/app/Http/Controllers/StoreApiController.php");
+    const store = read("client/src/contexts/StoreContext.tsx");
+    expect(routes).toContain("/store/activity");
+    expect(controller).toContain("public function activity(Request $request)");
+    expect(controller).toContain("$this->activityState($this->requireUser($request))");
+    expect(controller).toContain("where('user_id', $user->id)");
+    expect(store).toContain("const NOTIFICATION_POLLING_INTERVAL_MS = 30_000");
+    expect(store).toContain('api<StoreActivity>("/store/activity")');
+    expect(store).toContain('document.visibilityState === "hidden"');
+    expect(store).toContain("window.setInterval(() => { void refreshActivity(); }, NOTIFICATION_POLLING_INTERVAL_MS)");
+    expect(store).toContain("window.clearInterval(interval)");
+    expect(store).toContain("document.removeEventListener(\"visibilitychange\", refreshOnReturn)");
+  });
 });

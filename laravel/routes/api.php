@@ -17,6 +17,7 @@ Route::middleware('web')->prefix('auth')->group(function () {
 
 Route::middleware('web')->group(function () {
     Route::get('/store/bootstrap', [StoreApiController::class, 'bootstrap']);
+    Route::get('/store/activity', [StoreApiController::class, 'activity']);
     Route::post('/catalog/sync', [StoreApiController::class, 'syncCatalog']);
     Route::put('/products/{id}', [StoreApiController::class, 'saveProduct']);
     Route::delete('/products/{id}', [StoreApiController::class, 'deleteProduct']);

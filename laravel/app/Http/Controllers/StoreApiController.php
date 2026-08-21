@@ -26,6 +26,11 @@ class StoreApiController extends Controller
         return response()->json($this->storeState($request->user()));
     }
 
+    public function activity(Request $request): JsonResponse
+    {
+        return response()->json($this->activityState($this->requireUser($request)));
+    }
+
     public function syncCatalog(Request $request): JsonResponse
     {
         if (DB::table('kitchen_products')->exists()) $this->requireAdmin($request);
@@ -201,15 +206,21 @@ class StoreApiController extends Controller
 
     private function storeState(?User $user): array
     {
+        $activity = $this->activityState($user);
+        $campaigns = DB::table('kitchen_campaigns')->orderByDesc('priority')->orderBy('startsAt');
+        if (!$user || $user->role !== 'admin') $campaigns->where('enabled', true)->where('endsAt', '>', now());
+        return ['products' => DB::table('kitchen_products')->orderByDesc('updated_at')->get()->map(fn ($row) => $this->productRow($row))->all(), 'categories' => DB::table('kitchen_categories')->orderBy('name')->get()->map(fn ($row) => ['id' => $row->id, 'name' => $row->name, 'description' => $row->description, 'image' => $row->image])->all(), 'coupons' => DB::table('kitchen_coupons')->orderByDesc('updated_at')->get()->map(fn ($row) => $this->couponRow($row))->all(), 'campaigns' => $campaigns->get()->map(fn ($row) => $this->campaignRow($row))->all(), ...$activity];
+    }
+
+    private function activityState(?User $user): array
+    {
         $orders = DB::table('kitchen_orders')->orderByDesc('createdAt');
         $notifications = DB::table('kitchen_notifications')->orderByDesc('createdAt');
         if (!$user) { $orders->whereRaw('1 = 0'); $notifications->whereRaw('1 = 0'); }
         elseif ($user->role !== 'admin') { $orders->where('user_id', $user->id); $notifications->where('user_id', $user->id); }
         $orderRows = $orders->get();
         $orderIds = $orderRows->pluck('id')->all();
-        $campaigns = DB::table('kitchen_campaigns')->orderByDesc('priority')->orderBy('startsAt');
-        if (!$user || $user->role !== 'admin') $campaigns->where('enabled', true)->where('endsAt', '>', now());
-        return ['products' => DB::table('kitchen_products')->orderByDesc('updated_at')->get()->map(fn ($row) => $this->productRow($row))->all(), 'categories' => DB::table('kitchen_categories')->orderBy('name')->get()->map(fn ($row) => ['id' => $row->id, 'name' => $row->name, 'description' => $row->description, 'image' => $row->image])->all(), 'coupons' => DB::table('kitchen_coupons')->orderByDesc('updated_at')->get()->map(fn ($row) => $this->couponRow($row))->all(), 'campaigns' => $campaigns->get()->map(fn ($row) => $this->campaignRow($row))->all(), 'orders' => $orderRows->map(fn ($row) => $this->orderRow($row))->all(), 'notifications' => $notifications->get()->map(fn ($row) => $this->notificationRow($row))->all(), 'messages' => empty($orderIds) ? [] : DB::table('kitchen_messages')->whereIn('orderId', $orderIds)->orderBy('createdAt')->get()->map(fn ($row) => $this->messageRow($row))->all()];
+        return ['orders' => $orderRows->map(fn ($row) => $this->orderRow($row))->all(), 'notifications' => $notifications->get()->map(fn ($row) => $this->notificationRow($row))->all(), 'messages' => empty($orderIds) ? [] : DB::table('kitchen_messages')->whereIn('orderId', $orderIds)->orderBy('createdAt')->get()->map(fn ($row) => $this->messageRow($row))->all()];
     }
 
     private function upsertCategory(array $data): void { DB::table('kitchen_categories')->updateOrInsert(['id' => $data['id']], ['name' => $data['name'], 'description' => $data['description'] ?? '', 'image' => $data['image'] ?? '', 'updated_at' => now(), 'created_at' => now()]); }

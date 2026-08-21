@@ -6,7 +6,9 @@ import { formatILS } from "@/lib/money";
 import { laravelRequest, useAuth } from "@/contexts/AuthContext";
 
 const STORE_KEY = "our-kitchen-copperline-v1";
+const NOTIFICATION_POLLING_INTERVAL_MS = 30_000;
 const freshState = (): StoreState => ({ products, categories, coupons, campaigns, cart: [], couponCode: null, orders, notifications, messages });
+type StoreActivity = Pick<StoreState, "orders" | "notifications" | "messages">;
 
 type StoreContextValue = {
   state: StoreState;
@@ -62,6 +64,29 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     };
     void load(); return () => { active = false; };
   }, [cartId]);
+  useEffect(() => {
+    if (!user) return;
+    let active = true;
+    let refreshing = false;
+    const refreshActivity = async () => {
+      if (!active || refreshing || document.visibilityState === "hidden") return;
+      refreshing = true;
+      try {
+        const activity = await api<StoreActivity>("/store/activity");
+        if (active && activity) setState((current) => ({ ...current, ...activity }));
+      } finally {
+        refreshing = false;
+      }
+    };
+    const interval = window.setInterval(() => { void refreshActivity(); }, NOTIFICATION_POLLING_INTERVAL_MS);
+    const refreshOnReturn = () => { if (document.visibilityState === "visible") void refreshActivity(); };
+    document.addEventListener("visibilitychange", refreshOnReturn);
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", refreshOnReturn);
+    };
+  }, [user?.id]);
   useEffect(() => { if (hydrated && cartId) void api(`/carts/${cartId}`, "PUT", { cart: state.cart, couponCode: state.couponCode }); }, [cartId, hydrated, state.cart, state.couponCode]);
 
   const cartSubtotal = useMemo(() => state.cart.reduce((sum, line) => sum + (state.products.find((item) => item.id === line.productId)?.price ?? 0) * line.quantity, 0), [state.cart, state.products]);
@@ -108,8 +133,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       setState((current) => ({ ...current, orders: [confirmed, ...current.orders.filter((existing) => existing.id !== confirmed.id)], cart: [], couponCode: null }));
       return confirmed;
     },
-    updateOrderStatus: (orderId, status) => { setState((current) => ({ ...current, orders: current.orders.map((order) => order.id === orderId ? { ...order, status } : order), notifications: [{ id: `note-${Date.now()}`, audience: "customer", title: "Your order has moved", body: `${orderId} is now ${status}.`, createdAt: new Date().toISOString(), read: false, orderId }, ...current.notifications] })); void api(`/orders/${orderId}/status`, "PATCH", { status }); },
-    sendMessage: (orderId, sender, body) => { const message: ThreadMessage = { id: `msg-${Date.now()}`, orderId, sender, body, createdAt: new Date().toISOString() }; setState((current) => ({ ...current, messages: [...current.messages, message], notifications: [{ id: `note-${Date.now() + 1}`, audience: sender === "customer" ? "admin" : "customer", title: sender === "customer" ? "New order question" : "A note from the kitchen", body: body.slice(0, 72), createdAt: message.createdAt, read: false, orderId }, ...current.notifications] })); void api(`/orders/${orderId}/messages`, "POST", { sender, body }); },
+    updateOrderStatus: (orderId, status) => { setState((current) => ({ ...current, orders: current.orders.map((order) => order.id === orderId ? { ...order, status } : order) })); void api(`/orders/${orderId}/status`, "PATCH", { status }); },
+    sendMessage: (orderId, sender, body) => { const message: ThreadMessage = { id: `msg-${Date.now()}`, orderId, sender, body, createdAt: new Date().toISOString() }; setState((current) => ({ ...current, messages: [...current.messages, message] })); void api(`/orders/${orderId}/messages`, "POST", { sender, body }); },
     markNotificationsRead: (audience) => { setState((current) => ({ ...current, notifications: current.notifications.map((note) => note.audience === audience ? { ...note, read: true } : note) })); void api("/notifications/read", "POST", { audience }); },
     upsertProduct: (product) => { setState((current) => ({ ...current, products: current.products.some((item) => item.id === product.id) ? current.products.map((item) => item.id === product.id ? product : item) : [product, ...current.products] })); void api(`/products/${product.id}`, "PUT", product); },
     deleteProduct: (id) => { setState((current) => ({ ...current, products: current.products.filter((product) => product.id !== id), cart: current.cart.filter((line) => line.productId !== id) })); void api(`/products/${id}`, "DELETE"); },
