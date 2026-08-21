@@ -8,13 +8,14 @@
 | Area | Delivered capability | Status |
 |---|---|---|
 | Customer storefront | Browsing, product discovery, cart, coupon logic, authenticated checkout, tracking, and messaging | Implemented |
-| Customer accounts | Registration, sign-in, signed verification links, password recovery, account page, persistent session | Implemented |
+| Customer accounts | Phone/password registration and sign-in, email recovery, optional email verification, account page, persistent session | Implemented |
 | Administrator access | Dedicated `/admin/login`, Laravel `admin` role enforcement, protected `/admin` workspace | Implemented |
-| Commerce operations | Product, inventory, order, coupon, notification, and customer-message administration | Implemented |
+| Commerce operations | Product, inventory, order, coupon, campaign, notification, and customer-message administration | Implemented |
 | Persistence | TiDB/MySQL commerce, account, session, cache, and password-reset data | Implemented |
 | Localization | English/Arabic switching, URL state, Arabic typography, and RTL behavior | Implemented |
 | Storage | Managed S3-backed product-image upload and media serving | Implemented |
 | Email | Safe local verification/reset mail logging and environment-driven production mail configuration | Development ready; production provider required |
+| Notifications | Persisted customer and administrator activity refreshes every 30 seconds in active browser sessions | Implemented |
 | Payments | Payment collection integration | Not connected yet |
 
 ## 2. Brand, visual system, and installability
@@ -27,11 +28,11 @@ Delivered brand and installability work includes the supplied Our Kitchen logo a
 
 | Surface | Delivered functions |
 |---|---|
-| Home | Announcement ticker, sticky navigation, search, cart access, hero campaign, category/product merchandising, deal presentation, trust/value sections, newsletter area, and site footer |
+| Home | Announcement ticker, sticky navigation, global product search, cart access, timed-campaign countdown, Dorsha kitchenware discovery, category/product merchandising, deal presentation, trust/value sections, newsletter area, and site footer |
 | Shop | Product browsing with category, price, and brand filters; sorting and search |
 | Product detail | Image gallery, product variants/finishes, quantity selection, specifications/features, and related-product discovery |
 | Cart | Cart drawer and cart page, line-item quantity controls, removal, coupon entry, and live totals |
-| Checkout | Delivery address capture, session-owned name/email, ILS totals, coupon calculations, authenticated/verified-user enforcement, and server-confirmed order placement |
+| Checkout | Delivery address capture, session-owned name/email, ILS totals, coupon and campaign calculations, authenticated-user enforcement, and server-confirmed order placement |
 | Deals | Dedicated discounted-product surface |
 | Tracking | Customer-owned order history, status tracking, customer/admin message thread, and notifications |
 | Navigation | Responsive header/footer and a mobile bottom navigation pattern |
@@ -46,9 +47,9 @@ Orders persist customer ownership, delivery address, line items, pricing, shippi
 
 ## 5. Customer account system
 
-The customer account area delivers registration, standard customer sign-in at `/login`, registration at `/register`, password recovery at `/forgot-password`, password update at `/reset-password`, and the signed-in account page at `/account`.
+The customer account area delivers phone/password sign-in at `/login`, registration at `/register`, password recovery at `/forgot-password`, password update at `/reset-password`, and the signed-in account page at `/account`.
 
-Registration requires a name, an RFC-compliant email address, a unique email, and a password of at least 12 characters. Laravel hashes passwords before storage. Successful registration creates a persistent encrypted database-backed session and sends a signed email-verification link. The account page shows verification state and can request a new verification message.
+Registration requires a name, a unique Palestinian mobile number, a unique email address, and a password of at least 12 characters. Mobile numbers are normalized to E.164-compatible `+970` form and customers sign in with their saved mobile number and password. No SMS code is sent or accepted at this stage. Laravel hashes passwords before storage, and successful registration creates a persistent encrypted database-backed session. Email remains available for receipts and password recovery; signed email verification is retained but optional by default.
 
 Password recovery uses Laravel’s reset-token broker. Reset links are time-limited, password-reset requests are rate limited, and the browser reset screen keeps both the token and intended email together. Account enumeration is reduced by returning the same reset-request response whether or not the email exists.
 
@@ -66,6 +67,7 @@ An administrator must still use a real account email and password, but Laravel m
 | Product media | Image upload to managed storage and reusable stored image URLs |
 | Order desk | Review orders, change status, inspect delivery/order details, and reply to customers |
 | Coupon desk | Create, edit, and remove percentage, fixed, and free-shipping offers |
+| Campaign desk | Create, edit, and remove time-aware percentage, fixed, and free-shipping campaigns with all-store, maker/brand, or category targeting and priority |
 | Inbox | Review order and message notifications and mark them read |
 
 ## 7. Laravel backend and persistent data
@@ -82,15 +84,15 @@ Persistent TiDB/MySQL storage covers the following data areas:
 | Security services | Database-backed cache and cache locks used by Laravel rate limiting |
 | Media | Managed storage keys, media URLs, filename, content type, and size metadata |
 
-Authenticated carts are bound to `cart-{user.id}`. The backend checks cart ownership, order ownership, and role authorization. Checkout now retains the cart until Laravel confirms the order; an expired session or verification failure is returned to the customer rather than being shown as a successful order.
+Authenticated carts are bound to `cart-{user.id}`. The backend checks cart ownership, order ownership, and role authorization. Checkout retains the cart until Laravel confirms the order; an expired session is returned to the customer rather than being shown as a successful order. Campaign discounts are recalculated on the server according to campaign timing and eligibility.
 
 ## 8. Security controls
 
 > Authorization is enforced by Laravel on the server. Hiding or changing a browser screen cannot grant administrator access.
 
-The security implementation includes database-backed Laravel sessions with session encryption, CSRF/XSRF token handling for state-changing browser requests, session regeneration after registration and sign-in, hashed passwords, email uniqueness validation, signed email verification, time-limited password-reset tokens, and rate-limited registration, sign-in, verification resend, and reset-request endpoints.
+The security implementation includes database-backed Laravel sessions with session encryption, CSRF/XSRF token handling for state-changing browser requests, session regeneration after registration and sign-in, hashed passwords, unique normalized customer mobile numbers and emails, optional signed email verification, time-limited password-reset tokens, and rate-limited registration, sign-in, verification resend, and reset-request endpoints.
 
-Administrative mutations no longer rely on the previous passcode/header approach. They require an authenticated account whose database role is `admin`. Order placement requires both a signed-in account and a verified email at the server boundary.
+Administrative mutations no longer rely on the previous passcode/header approach. They require an authenticated account whose database role is `admin`. Order placement requires a signed-in customer account at the server boundary. Persisted order, message, and notification activity reconciles automatically every 30 seconds while an authenticated browser tab is active.
 
 ## 9. Administrator provisioning and operations
 
@@ -122,7 +124,15 @@ The project has a multi-stage production Docker runtime that builds the React st
 
 ## 14. Validation completed
 
-The implemented system has been validated with TypeScript checks, PHP syntax checks, Laravel route inspection, browser screenshots, and Vitest regression tests. The latest completed access-flow validation covered **12 passing regression tests**. Manual local validation also exercised registration, CSRF-backed persistent sessions, signed verification links, local password-reset messages, stale-session order rejection, role promotion, and administrator API authorization.
+The implemented system has been validated with TypeScript checks, PHP syntax checks, Laravel behavior tests, browser screenshots, and **26 passing Vitest regression tests**. Validation covers campaign timing and server-side discount rules, scoped activity polling, phone normalization and duplicate rejection, customer sessions, separate administrator access, and CSRF-backed authentication flows.
+
+## 16. Campaigns, notifications, and recovery guidance
+
+Administrators can create scheduled campaigns without a background scheduler. A campaign supports percentage, fixed-amount, or free-shipping discounts; all-store, maker/brand, or category targeting; start/end time; and priority. The homepage chooses the relevant live or upcoming campaign and renders its countdown, while checkout trusts the server-calculated eligibility and savings.
+
+Customer and administrator activity is persisted in Laravel and automatically refreshed every 30 seconds while the authenticated browser tab is active. Polling pauses while a tab is hidden and refreshes on return, reducing unnecessary requests without requiring a manual reload.
+
+`DATABASE_SECURITY_AND_BACKUP.md` records the current recovery posture. The application has a sound security baseline, but a standalone automatic database backup and tested restore policy still require an owner-approved storage destination and operational configuration.
 
 ## 15. Items intentionally awaiting a production decision
 
@@ -130,5 +140,7 @@ The implemented system has been validated with TypeScript checks, PHP syntax che
 |---|---|
 | Real email inbox delivery | Choose and configure a transactional email provider or SMTP credentials |
 | Live payment collection | Choose Stripe or Shopify and connect the store/payment configuration |
+| SMS one-time-code verification | Select and configure an SMS provider when real code delivery is required; the current customer flow uses phone plus password without SMS verification |
+| Automated database recovery copies | Choose an encrypted off-site backup destination, retention policy, and restore-test process |
 | Public administrator accounts | Register the intended staff email, then promote it through the controlled operator command |
 | Publish to a live domain | Save checkpoint is complete; use the workspace Publish control and configure the desired domain |

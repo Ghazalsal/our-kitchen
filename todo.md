@@ -175,3 +175,9 @@
 - [x] Assess the current backend database recovery posture and distinguish project checkpoints from database backups.
 - [x] Review the implemented database access, authentication, authorization, CSRF, storage, and secret-handling controls.
 - [x] Document the verified security posture, remaining operational gaps, and a practical backup recommendation.
+
+## Backup Activation and Production Security Verification
+
+- [x] Defer current official Task Data Backup creation at the owner’s request; no export was started.
+- [ ] Verify deployed production `APP_DEBUG` and `SESSION_SECURE_COOKIE` values when the owner authorizes production-environment access.
+- [ ] Present off-site encrypted backup destination options, obtain owner approval, then implement daily recovery copies with retention and a restore-test procedure.
