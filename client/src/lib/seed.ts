@@ -1,5 +1,5 @@
 /** Copperline Atelier seed: tactile kitchen appliance catalogue and working sample commerce data. */
-import type { Category, Coupon, Order, Product, StoreNotification, ThreadMessage } from "./types";
+import type { Campaign, Category, Coupon, Order, Product, StoreNotification, ThreadMessage } from "./types";
 
 const hero = "/manus-storage/our-kitchen-hero_5efbd6f3.jpg";
 const espresso = "/manus-storage/our-kitchen-espresso_f659044b.jpg";
@@ -117,6 +117,8 @@ export const coupons: Coupon[] = [
   { id: "bake-25", code: "BAKE25", type: "fixed", value: 25, minSpend: 220, usageLimit: 40, uses: 11, expiresAt: "2026-10-01", categoryIds: ["bake"], active: true },
   { id: "countership", code: "COUNTERSHIP", type: "free_shipping", value: 0, minSpend: 80, usageLimit: 200, uses: 31, expiresAt: "2026-12-31", active: true },
 ];
+
+export const campaigns: Campaign[] = [];
 
 export const orders: Order[] = [
   { id: "CK-18042", createdAt: "2026-08-15T10:30:00.000Z", status: "preparing", lines: [{ productId: "morrow-mixer", quantity: 1, color: "Copper", name: "Morrow Stand Mixer", price: 429, image: hero }], subtotal: 429, discount: 42.9, shipping: 0, total: 386.1, couponCode: "COPPER10", customerName: "Maya O’Neil", customerEmail: "maya@example.com", address: "41 Alder Street, Portland, OR 97205" },

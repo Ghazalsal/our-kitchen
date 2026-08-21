@@ -64,6 +64,7 @@ export interface Order {
   shipping: number;
   total: number;
   couponCode?: string;
+  campaignId?: string;
   customerName: string;
   customerEmail: string;
   address: string;
@@ -91,6 +92,7 @@ export interface StoreState {
   products: Product[];
   categories: Category[];
   coupons: Coupon[];
+  campaigns: Campaign[];
   cart: CartLine[];
   couponCode: string | null;
   orders: Order[];
@@ -101,6 +103,31 @@ export interface StoreState {
 export interface CouponResult {
   valid: boolean;
   message: string;
+  discount: number;
+  freeShipping: boolean;
+}
+
+export type CampaignType = "percent" | "fixed" | "free_shipping";
+export type CampaignTargetType = "all" | "brand" | "categories";
+
+export interface Campaign {
+  id: string;
+  name: string;
+  type: CampaignType;
+  value: number;
+  minSpend: number;
+  maxDiscount?: number;
+  targetType: CampaignTargetType;
+  targetValues: string[];
+  startsAt: string;
+  endsAt: string;
+  enabled: boolean;
+  priority: number;
+}
+
+export interface CampaignResult {
+  campaign: Campaign | null;
+  eligibleSubtotal: number;
   discount: number;
   freeShipping: boolean;
 }

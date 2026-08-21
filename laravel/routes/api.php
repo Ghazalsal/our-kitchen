@@ -22,6 +22,8 @@ Route::middleware('web')->group(function () {
     Route::delete('/products/{id}', [StoreApiController::class, 'deleteProduct']);
     Route::put('/coupons/{id}', [StoreApiController::class, 'saveCoupon']);
     Route::delete('/coupons/{id}', [StoreApiController::class, 'deleteCoupon']);
+    Route::put('/campaigns/{id}', [StoreApiController::class, 'saveCampaign']);
+    Route::delete('/campaigns/{id}', [StoreApiController::class, 'deleteCampaign']);
     Route::put('/carts/{id}', [StoreApiController::class, 'saveCart']);
     Route::get('/carts/{id}', [StoreApiController::class, 'getCart']);
     Route::post('/orders', [StoreApiController::class, 'createOrder']);

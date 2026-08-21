@@ -185,4 +185,35 @@ describe("Laravel commerce backend", () => {
     expect(account).toContain("user.emailVerificationRequired && !user.emailVerified");
     expect(rollout).toContain("KITCHEN_REQUIRE_EMAIL_VERIFICATION=true");
   });
+
+  it("adds time-aware scoped campaigns with protected management, countdown, and server-side discount rules", () => {
+    const migration = read("laravel/database/migrations/2026_08_21_000005_create_kitchen_campaigns_table.php");
+    const routes = read("laravel/routes/api.php");
+    const controller = read("laravel/app/Http/Controllers/StoreApiController.php");
+    const context = read("client/src/contexts/StoreContext.tsx");
+    const campaigns = read("client/src/pages/Campaigns.tsx");
+    const home = read("client/src/pages/Home.tsx");
+    const checkout = read("client/src/pages/Checkout.tsx");
+    expect(migration).toContain("kitchen_campaigns");
+    expect(migration).toContain("targetType");
+    expect(migration).toContain("startsAt");
+    expect(migration).toContain("endsAt");
+    expect(routes).toContain("/campaigns/{id}");
+    expect(controller).toContain("requireAdmin($request)");
+    expect(controller).toContain("campaignDiscount");
+    expect(controller).toContain("where('startsAt', '<=', now())");
+    expect(controller).toContain("targetType === 'brand'");
+    expect(context).toContain("campaignResult");
+    expect(context).toContain("/campaigns/${campaign.id}");
+    expect(context).toContain("upsertCampaign: async");
+    expect(context).toContain("await laravelRequest<Campaign>");
+    expect(context).toContain("deleteCampaign: async");
+    expect(campaigns).toContain("Campaign applies to");
+    expect(campaigns).toContain("Create campaign");
+    expect(home).toContain("CampaignCountdown");
+    expect(home).toContain("starts in");
+    expect(home).toContain("available.filter((campaign) => new Date(campaign.startsAt).getTime() <= now)");
+    expect(checkout).toContain("campaign.campaign.name");
+    expect(checkout).not.toContain("if (!user.emailVerified)");
+  });
 });

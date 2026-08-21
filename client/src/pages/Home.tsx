@@ -1,5 +1,6 @@
 /** Copperline Atelier home: an editorial procession from campaign hero to tactile product discovery. */
 import { ArrowDownRight, ArrowUpRight, Check, Mail, ShieldCheck, Sparkles, Truck } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Link } from "wouter";
 import { StorefrontShell } from "@/components/StorefrontShell";
 import { ProductCard } from "@/components/ProductCard";
@@ -27,6 +28,8 @@ export default function Home() {
 
       <section className="border-b border-[#E6D7C7] bg-[#FFFDF9]"><div className="container grid divide-y divide-[#E6D7C7] md:grid-cols-3 md:divide-x md:divide-y-0"><Trust icon={<Truck />} title="Counter-to-door delivery" body={`Complimentary delivery when the order settles over ${formatILS(300)}.`} /><Trust icon={<ShieldCheck />} title="Two years of care" body="Thoughtful support after the box leaves our kitchen." /><Trust icon={<Sparkles />} title="Chosen, not crowded" body="A considered collection that knows its place on the counter." /></div></section>
 
+      <CampaignCountdown campaigns={state.campaigns} />
+
       <section className="container py-20 md:py-28"><div className="flex items-end justify-between gap-6"><div><p className="eyebrow">Start with the ritual</p><h2 className="mt-3 text-4xl tracking-[-0.045em] md:text-5xl">Find your kitchen’s<br />next good habit.</h2></div><Link href="/shop" className="hidden items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-[#8A4A27] hover:text-[#C0632D] sm:inline-flex">All tools <ArrowUpRight size={15} /></Link></div><div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{state.categories.map((category, index) => <Link key={category.id} href={`/shop?category=${category.id}`} className={`group relative min-h-72 overflow-hidden ${index === 0 ? "lg:mt-12" : index === 2 ? "lg:-mt-8" : ""}`}><img src={category.image} alt="" className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.06]" /><div className="image-wash" /><div className="relative flex h-full min-h-72 flex-col justify-end p-5 text-white"><span className="stamp w-fit border-white/50 bg-black/10">0{index + 1}</span><h3 className="mt-3 text-3xl">{category.name}</h3><p className="mt-2 max-w-48 text-sm leading-5 text-[#F5EEE5]">{category.description}</p></div></Link>)}</div></section>
 
       {dorshaEdit.length > 0 && <section className="bg-[#EFE4D7] py-20 md:py-28"><div className="container"><div className="grid items-end gap-5 md:grid-cols-[1fr_auto]"><div><p className="eyebrow">A tabletop edit</p><h2 className="mt-3 text-4xl tracking-[-0.045em] md:text-5xl">Dorsha, for the table<br />that gathers well.</h2></div><p className="max-w-xs text-sm leading-6 text-[#5B4E44]">Cups, plates, spoons and serving pieces chosen to make every day feel a little more set.</p></div><div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">{dorshaEdit.map((product, index) => <ProductCard key={product.id} product={product} index={index} />)}</div><div className="mt-9"><Link href="/shop" className="ink-button">Shop Dorsha tableware <ArrowUpRight size={16} /></Link></div></div></section>}
@@ -43,3 +46,17 @@ export default function Home() {
 function Trust({ icon, title, body }: { icon: React.ReactNode; title: string; body: string }) {
   return <div className="flex gap-4 px-0 py-6 md:px-7 md:py-8"><span className="mt-0.5 text-[#C0632D]">{icon}</span><div><h3 className="font-['Fraunces'] text-xl">{title}</h3><p className="mt-1 text-sm leading-5 text-[#73675E]">{body}</p></div></div>;
 }
+
+function CampaignCountdown({ campaigns }: { campaigns: import("@/lib/types").Campaign[] }) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => { const timer = window.setInterval(() => setNow(Date.now()), 1000); return () => window.clearInterval(timer); }, []);
+  const available = campaigns.filter((campaign) => campaign.enabled && new Date(campaign.endsAt).getTime() > now);
+  const sortCampaigns = (items: typeof available) => items.sort((a, b) => b.priority - a.priority || new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime());
+  const active = sortCampaigns(available.filter((campaign) => new Date(campaign.startsAt).getTime() <= now))[0] ?? sortCampaigns(available.filter((campaign) => new Date(campaign.startsAt).getTime() > now))[0];
+  if (!active) return null;
+  const startsAt = new Date(active.startsAt).getTime(); const endsAt = new Date(active.endsAt).getTime(); const isLive = startsAt <= now; const remaining = Math.max(0, (isLive ? endsAt : startsAt) - now);
+  const hours = Math.floor(remaining / 3_600_000); const minutes = Math.floor((remaining % 3_600_000) / 60_000); const seconds = Math.floor((remaining % 60_000) / 1_000);
+  const offer = active.type === "percent" ? `${active.value}% off` : active.type === "fixed" ? `${formatILS(active.value)} off` : "Free delivery";
+  return <section className="bg-[#C0632D] py-5 text-[#FFF9F3]"><div className="container flex flex-wrap items-center justify-between gap-5"><div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#FFE0C6]">{isLive ? "Live now" : "Coming soon"}</p><h2 className="mt-1 text-3xl leading-none md:text-4xl">{active.name} <span className="font-sans text-base font-bold">· {offer}</span></h2></div><div className="flex items-center gap-2 text-center"><TimeUnit value={hours} label="hours" /><span className="text-2xl">:</span><TimeUnit value={minutes} label="mins" /><span className="text-2xl">:</span><TimeUnit value={seconds} label="secs" /><span className="ml-2 text-xs font-bold uppercase tracking-[0.14em] text-[#FFE0C6]">{isLive ? "ends in" : "starts in"}</span></div><Link href="/shop" className="border border-[#FFE0C6]/80 px-4 py-3 text-[10px] font-bold uppercase tracking-[0.14em] transition hover:bg-[#17130F] hover:border-[#17130F]">Shop the offer <ArrowUpRight size={14} className="inline" /></Link></div></section>;
+}
+function TimeUnit({ value, label }: { value: number; label: string }) { return <span><b className="block min-w-10 font-['Fraunces'] text-3xl leading-none tabular-nums">{String(value).padStart(2, "0")}</b><small className="mt-1 block text-[9px] font-bold uppercase tracking-[0.12em] text-[#FFE0C6]">{label}</small></span>; }

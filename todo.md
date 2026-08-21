@@ -122,6 +122,7 @@
 - [x] Make email verification optional for registration and checkout while retaining the underlying signed verification flow.
 - [x] Add a documented configuration setting to re-enable mandatory verification when transactional email is connected.
 - [x] Verify unverified customers can register and complete protected checkout while administrator role access remains unchanged.
+- [x] Align checkout verification prompts with the optional-verification setting so they do not block or mislead customers when verification is disabled.
 
 ## Customer Phone Verification Authentication
 
@@ -146,3 +147,15 @@
 - [x] Ensure homepage category links preserve their query selection in the shop filter.
 - [x] Verify the applied shop query-sync implementation initializes and updates category selection from the current URL.
 - [x] Confirm homepage category-link regression coverage and run the full test/type-check suite.
+
+## Timed Discount Campaigns and Customer Countdown
+
+- [x] Confirm time-aware campaign activation for scheduled start and end times without background scheduling.
+- [x] Add persistent administrator-managed campaigns with percentage, fixed, and free-shipping promotion options.
+- [x] Add configurable campaign targeting for all products, a maker/brand, or one or more categories.
+- [x] Add a customer-homepage campaign countdown that changes from launch to expiry timing automatically.
+- [x] Validate server-side campaign applicability, time boundaries, discount calculations, and administrator controls.
+- [x] Document the administrator workflow for creating, prioritizing, and timing Black Friday or future campaigns.
+- [x] Make campaign create, update, and delete wait for Laravel confirmation and roll back the interface when persistence fails.
+- [x] Add behavioral Laravel regression coverage for protected campaign CRUD and time-aware server-side order recalculation.
+- [x] Capture successful authenticated validation of campaign management and campaign-discount order behavior before release.
