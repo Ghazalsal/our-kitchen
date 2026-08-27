@@ -249,4 +249,17 @@ describe("Laravel commerce backend", () => {
     expect(account).toContain("identifier: phone");
     expect(context).toContain("phoneVerified: boolean");
   });
+
+  it("keeps the Laravel application prepared for a secure MySQL target cutover", () => {
+    const database = read("laravel/config/database.php");
+    const dockerfile = read("Dockerfile");
+    const handoff = read("MYSQL_MIGRATION_HANDOFF.md");
+    expect(database).toContain("'default' => env('DATABASE_URL') ? 'mysql'");
+    expect(database).toContain("'driver' => 'mysql'");
+    expect(dockerfile).toContain("pdo_mysql");
+    expect(handoff).toContain("MySQL 8.0+");
+    expect(handoff).toContain("Do not migrate. Invalidate.");
+    expect(handoff).toContain("SESSION_SECURE_COOKIE=true");
+    expect(handoff).toContain("Persistent-table counts and relationships reconcile.");
+  });
 });

@@ -181,3 +181,16 @@
 - [x] Defer current official Task Data Backup creation at the owner’s request; no export was started.
 - [ ] Verify deployed production `APP_DEBUG` and `SESSION_SECURE_COOKIE` values when the owner authorizes production-environment access.
 - [ ] Present off-site encrypted backup destination options, obtain owner approval, then implement daily recovery copies with retention and a restore-test procedure.
+
+## MySQL Engine Migration
+
+- [ ] Confirm the target true-MySQL service, secure connection requirements, and maintenance-window approval for a zero-data-loss migration from TiDB.
+- [ ] Create and validate a recoverable source-data snapshot before any production connection switch.
+- [ ] Provision the target MySQL schema and securely configure its Laravel connection.
+- [ ] Migrate customer, commerce, campaign, session, and media-metadata data; reconcile record counts and integrity.
+- [ ] Switch the backend to MySQL, validate customer and administrator workflows, and retain a documented rollback path.
+
+## MySQL Migration Package
+
+- [x] Create a target-neutral, MySQL-compatible schema and migration handoff for the current Laravel application.
+- [x] Document the secure import, validation, cutover, and rollback process for the user’s local MySQL test run.
