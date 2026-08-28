@@ -26,19 +26,103 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="border-b border-[#E6D7C7] bg-[#FFFDF9]"><div className="container grid divide-y divide-[#E6D7C7] md:grid-cols-3 md:divide-x md:divide-y-0"><Trust icon={<Truck />} title="Counter-to-door delivery" body={`Complimentary delivery when the order settles over ${formatILS(300)}.`} /><Trust icon={<ShieldCheck />} title="Two years of care" body="Thoughtful support after the box leaves our kitchen." /><Trust icon={<Sparkles />} title="Chosen, not crowded" body="A considered collection that knows its place on the counter." /></div></section>
-
       <CampaignCountdown campaigns={state.campaigns} />
 
-      <section className="container py-20 md:py-28"><div className="flex items-end justify-between gap-6"><div><p className="eyebrow">Start with the ritual</p><h2 className="mt-3 text-4xl tracking-[-0.045em] md:text-5xl">Find your kitchen’s<br />next good habit.</h2></div><Link href="/shop" className="hidden items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-[#8A4A27] hover:text-[#C0632D] sm:inline-flex">All tools <ArrowUpRight size={15} /></Link></div><div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{state.categories.map((category, index) => <Link key={category.id} href={`/shop?category=${category.id}`} className={`group relative min-h-72 overflow-hidden ${index === 0 ? "lg:mt-12" : index === 2 ? "lg:-mt-8" : ""}`}><img src={category.image} alt="" className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.06]" /><div className="image-wash" /><div className="relative flex h-full min-h-72 flex-col justify-end p-5 text-white"><span className="stamp w-fit border-white/50 bg-black/10">0{index + 1}</span><h3 className="mt-3 text-3xl">{category.name}</h3><p className="mt-2 max-w-48 text-sm leading-5 text-[#F5EEE5]">{category.description}</p></div></Link>)}</div></section>
+      <section className="py-16 md:py-24">
+        <div className="container mb-10 flex items-end justify-between gap-6">
+          <div><p className="eyebrow">The collection</p><h2 className="mt-3 text-4xl tracking-[-0.045em] md:text-5xl">Start with the ritual.</h2></div>
+          <Link href="/shop" className="text-xs font-bold uppercase tracking-[0.14em] text-[#8A4A27] hover:text-[#C0632D]">Browse all <ArrowUpRight size={15} className="inline" /></Link>
+        </div>
+        <div className="no-scrollbar flex gap-5 overflow-x-auto px-5 pb-4 md:px-[max(1.25rem,calc((100vw-1280px)/2))]">
+          {state.categories.map((category, index) => (
+            <Link key={category.id} href={`/shop?category=${category.id}`} className="group relative min-w-[280px] flex-shrink-0 overflow-hidden md:min-w-[340px]">
+              <div className="aspect-[4/5] overflow-hidden bg-[#E9DCCD]">
+                <img src={category.image} alt="" className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.06]" />
+                <div className="image-wash opacity-40 group-hover:opacity-60" />
+              </div>
+              <div className="absolute inset-0 flex flex-col justify-end p-6 text-white">
+                <span className="stamp w-fit border-white/40 bg-black/10">0{index + 1}</span>
+                <h3 className="mt-3 text-3xl font-['Fraunces'] leading-none">{category.name}</h3>
+                <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-[#F5EEE5] opacity-0 transition duration-300 group-hover:opacity-100">{category.description}</p>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </section>
 
-      {dorshaEdit.length > 0 && <section className="bg-[#EFE4D7] py-20 md:py-28"><div className="container"><div className="grid items-end gap-5 md:grid-cols-[1fr_auto]"><div><p className="eyebrow">A tabletop edit</p><h2 className="mt-3 text-4xl tracking-[-0.045em] md:text-5xl">Dorsha, for the table<br />that gathers well.</h2></div><p className="max-w-xs text-sm leading-6 text-[#5B4E44]">Cups, plates, spoons and serving pieces chosen to make every day feel a little more set.</p></div><div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">{dorshaEdit.map((product, index) => <ProductCard key={product.id} product={product} index={index} />)}</div><div className="mt-9"><Link href="/shop" className="ink-button">Shop Dorsha tableware <ArrowUpRight size={16} /></Link></div></div></section>}
+      <section className="bg-[#EFE4D7] py-16 md:py-24">
+        <div className="container mb-10 flex items-end justify-between gap-6">
+          <div><p className="eyebrow">Most reached for</p><h2 className="mt-3 text-4xl tracking-[-0.045em] md:text-5xl">Good tools, in use.</h2></div>
+          <Link href="/shop" className="text-xs font-bold uppercase tracking-[0.14em] text-[#8A4A27] hover:text-[#C0632D]">Shop tools <ArrowUpRight size={15} className="inline" /></Link>
+        </div>
+        <div className="no-scrollbar flex gap-5 overflow-x-auto px-5 pb-4 md:px-[max(1.25rem,calc((100vw-1280px)/2))]">
+          {featured.map((product, index) => (
+            <div key={product.id} className="w-[280px] flex-shrink-0 md:w-[320px]">
+              <ProductCard product={product} index={index} />
+            </div>
+          ))}
+        </div>
+      </section>
 
-      <section className="relative overflow-hidden bg-[#EFE4D7] py-16 md:py-20"><div className="container grid items-center gap-10 lg:grid-cols-[1fr_1.25fr]"><div className="lg:pl-[10%]"><p className="eyebrow">The slow heat edit</p><h2 className="mt-3 max-w-sm text-4xl leading-[0.95] tracking-[-0.045em] md:text-5xl">An oven that knows a small meal can still be an occasion.</h2><p className="mt-5 max-w-md text-sm leading-6 text-[#5B4E44]">The Brine countertop oven carries a proper roast, a small loaf, or the cheese-on-toast that turns dinner around.</p><Link href={`/product/${deal.id}`} className="ink-button mt-7">Meet the Brine <ArrowDownRight size={16} /></Link></div><div className="relative min-h-80 overflow-hidden bg-[#17130F] md:min-h-[420px]"><img src={baking} alt="Brass countertop oven on a kitchen table" className="absolute inset-0 h-full w-full object-cover" /><div className="absolute bottom-5 left-5 border-l border-[#D9A441] bg-[#17130F]/85 p-4 text-[#FAF6F0]"><span className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#D9A441]">Copper deal</span><p className="mt-1 font-['Fraunces'] text-2xl">{formatILS(deal.price)} {deal.compareAt && <span className="text-base text-[#CDBFB2] line-through">{formatILS(deal.compareAt)}</span>}</p></div></div></div></section>
+      <section className="relative overflow-hidden bg-[#17130F] py-20 text-[#FAF6F0] md:py-32">
+        <div className="container grid items-center gap-12 lg:grid-cols-[1fr_1.2fr]">
+          <div className="lg:pr-12">
+            <p className="eyebrow !text-[#D9A441]">The slow heat edit</p>
+            <h2 className="mt-4 text-5xl leading-[0.92] tracking-[-0.045em] md:text-6xl">An oven that knows a small meal can still be an occasion.</h2>
+            <p className="mt-7 max-w-md text-base leading-7 text-[#CDBFB2]">The Brine countertop oven carries a proper roast, a small loaf, or the cheese-on-toast that turns dinner around.</p>
+            <div className="mt-10 flex flex-wrap gap-4">
+              <Link href={`/product/${deal.id}`} className="copper-button">Meet the Brine <ArrowDownRight size={16} /></Link>
+              <div className="flex items-center gap-3 border-l border-[#D9A441]/40 pl-5">
+                <span className="font-['Fraunces'] text-3xl">{formatILS(deal.price)}</span>
+                {deal.compareAt && <span className="text-sm text-[#8B7D70] line-through">{formatILS(deal.compareAt)}</span>}
+              </div>
+            </div>
+          </div>
+          <div className="relative aspect-video overflow-hidden bg-[#211a15] md:aspect-[1.4/1]">
+            <img src={baking} alt="Brass countertop oven" className="h-full w-full object-cover opacity-90 transition duration-700 hover:scale-105" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#17130F]/40 to-transparent" />
+          </div>
+        </div>
+      </section>
 
-      <section className="container py-20 md:py-28"><div className="grid items-end gap-5 md:grid-cols-[1fr_auto]"><div><p className="eyebrow">Most reached for</p><h2 className="mt-3 text-4xl tracking-[-0.045em] md:text-5xl">Good tools, in their element.</h2></div><p className="max-w-xs text-sm leading-6 text-[#73675E]">A short list of tried-and-ready appliances for a counter that sees real work.</p></div><div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">{featured.map((product, index) => <ProductCard key={product.id} product={product} index={index} />)}</div></section>
+      {dorshaEdit.length > 0 && <section className="py-16 md:py-24">
+        <div className="container mb-10 flex items-end justify-between gap-6">
+          <div><p className="eyebrow">A tabletop edit</p><h2 className="mt-3 text-4xl tracking-[-0.045em] md:text-5xl">Dorsha, for the table.</h2></div>
+          <Link href="/shop?brand=Dorsha" className="text-xs font-bold uppercase tracking-[0.14em] text-[#8A4A27] hover:text-[#C0632D]">Tableware <ArrowUpRight size={15} className="inline" /></Link>
+        </div>
+        <div className="no-scrollbar flex gap-5 overflow-x-auto px-5 pb-4 md:px-[max(1.25rem,calc((100vw-1280px)/2))]">
+          {dorshaEdit.map((product, index) => (
+            <div key={product.id} className="w-[280px] flex-shrink-0 md:w-[320px]">
+              <ProductCard product={product} index={index} />
+            </div>
+          ))}
+        </div>
+      </section>}
 
-      <section id="journal" className="bg-[#17130F] py-16 text-[#FAF6F0]"><div className="container grid items-center gap-10 md:grid-cols-[1.1fr_0.9fr]"><div><p className="eyebrow !text-[#D9A441]">From the kitchen book</p><h2 className="mt-3 max-w-lg text-4xl leading-[0.96] tracking-[-0.045em] md:text-5xl">Useful notes for the counter you actually use.</h2></div><div className="border-l border-[#D9A441] pl-6"><p className="text-base leading-7 text-[#E8DCD1]">Monthly recipes, care notes and the occasional small saving—written with the expectation that you already know your way around a good pan.</p><div className="mt-6 flex max-w-md border-b border-[#786858] pb-2"><Mail size={16} className="mr-3 text-[#D9A441]" /><input className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-[#BBAA9C]" placeholder="Email for the kitchen book" /><button className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#D9A441]">Subscribe</button></div></div></div></section>
+      <section className="border-y border-[#E6D7C7] bg-[#FFFDF9]">
+        <div className="container grid divide-y divide-[#E6D7C7] md:grid-cols-3 md:divide-x md:divide-y-0">
+          <Trust icon={<Truck />} title="Counter-to-door delivery" body={`Complimentary delivery when the order settles over ${formatILS(300)}.`} />
+          <Trust icon={<ShieldCheck />} title="Two years of care" body="Thoughtful support after the box leaves our kitchen." />
+          <Trust icon={<Sparkles />} title="Chosen, not crowded" body="A considered collection that knows its place on the counter." />
+        </div>
+      </section>
+
+      <section id="journal" className="bg-[#17130F] py-16 text-[#FAF6F0] md:py-24">
+        <div className="container grid items-center gap-10 md:grid-cols-[1.1fr_0.9fr]">
+          <div>
+            <p className="eyebrow !text-[#D9A441]">From the kitchen book</p>
+            <h2 className="mt-3 max-w-lg text-4xl leading-[0.96] tracking-[-0.045em] md:text-5xl">Useful notes for the counter you actually use.</h2>
+          </div>
+          <div className="border-l border-[#D9A441] pl-6">
+            <p className="text-base leading-7 text-[#E8DCD1]">Monthly recipes, care notes and the occasional small saving—written with the expectation that you already know your way around a good pan.</p>
+            <div className="mt-6 flex max-w-md border-b border-[#786858] pb-2">
+              <Mail size={16} className="mr-3 text-[#D9A441]" />
+              <input className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-[#BBAA9C]" placeholder="Email for the kitchen book" />
+              <button className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#D9A441]">Subscribe</button>
+            </div>
+          </div>
+        </div>
+      </section>
     </main>
   </StorefrontShell>;
 }
