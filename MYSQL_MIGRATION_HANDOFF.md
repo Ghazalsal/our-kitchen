@@ -58,6 +58,25 @@ The source does not currently contain `jobs`, `job_batches`, or `failed_jobs`. L
 | `password_reset_tokens` | **Do not migrate. Invalidate.** | Ensures old reset links cannot survive an engine migration. |
 | Queue tables | **Create empty.** | They are not present on the source and should not introduce stale jobs. |
 
+## Local environment setup (.env)
+
+To run Our Kitchen on your local device with MySQL, you will need a `.env` file in the `laravel/` directory. **Never commit this file to Git.** You can use the following template:
+
+```env
+APP_NAME="Our Kitchen"
+APP_ENV=local
+APP_KEY=base64:YOUR_GENERATED_APP_KEY
+APP_DEBUG=true
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=your_local_db_name
+DB_USERNAME=your_local_username
+DB_PASSWORD=your_local_password
+SESSION_DRIVER=database
+CACHE_STORE=database
+```
+
 ## Required destination details
 
 The target must be **MySQL 8.0 or newer**, reachable from the deployed Laravel service over TLS. Create a database and a least-privilege application user with permissions to create and operate the listed application tables. Do not send the password in chat or commit it to Git.
