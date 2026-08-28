@@ -118,7 +118,7 @@ describe("Laravel commerce backend", () => {
     expect(seed).toContain('id: "dorsha-cutlery"');
     expect(seed).toContain('id: "dorsha-serve"');
     expect(home).toContain('product.brand === "Dorsha"');
-    expect(home).toContain("Shop Dorsha tableware");
+    expect(home).toContain("Dorsha, for the table");
     expect(translations).toContain('"Cups & mugs": "أكواب ومجّات"');
   });
 

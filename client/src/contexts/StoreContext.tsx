@@ -7,7 +7,7 @@ import { laravelRequest, useAuth } from "@/contexts/AuthContext";
 
 const STORE_KEY = "our-kitchen-copperline-v1";
 const NOTIFICATION_POLLING_INTERVAL_MS = 30_000;
-const freshState = (): StoreState => ({ products, categories, coupons, campaigns, cart: [], couponCode: null, orders, notifications, messages });
+const freshState = (): StoreState => ({ products, categories, coupons, campaigns, cart: [], saveForLater: [], couponCode: null, orders, notifications, messages });
 type StoreActivity = Pick<StoreState, "orders" | "notifications" | "messages">;
 
 type StoreContextValue = {
@@ -17,6 +17,9 @@ type StoreContextValue = {
   addToCart: (productId: string, color: string, quantity?: number) => void;
   updateQuantity: (productId: string, color: string, quantity: number) => void;
   removeFromCart: (productId: string, color: string) => void;
+  saveForLater: (productId: string, color: string) => void;
+  moveToCart: (productId: string, color: string) => void;
+  removeFromSaved: (productId: string, color: string) => void;
   setCouponCode: (code: string | null) => void;
   validateCoupon: (code: string | null, lines?: CartLine[]) => CouponResult;
   campaignResult: (lines?: CartLine[]) => CampaignResult;
@@ -59,9 +62,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     const load = async () => {
       let remote = await api<Omit<StoreState, "cart" | "couponCode">>("/store/bootstrap");
       if (remote && remote.products.length === 0) remote = await api<Omit<StoreState, "cart" | "couponCode">>("/catalog/sync", "POST", { products, categories, coupons });
-      const remoteCart = cartId ? await api<{ cart: CartLine[]; couponCode: string | null }>(`/carts/${cartId}`) : null;
+      const remoteCart = cartId ? await api<{ cart: CartLine[]; saveForLater: CartLine[]; couponCode: string | null }>(`/carts/${cartId}`) : null;
       if (!active || !remote) return;
-      setState((current) => ({ ...freshState(), ...remote, cart: remoteCart?.cart?.length ? remoteCart.cart : current.cart, couponCode: remoteCart?.couponCode ?? current.couponCode }));
+      setState((current) => ({ ...freshState(), ...remote, cart: remoteCart?.cart?.length ? remoteCart.cart : current.cart, saveForLater: remoteCart?.saveForLater?.length ? remoteCart.saveForLater : current.saveForLater, couponCode: remoteCart?.couponCode ?? current.couponCode }));
       setHydrated(true);
     };
     void load(); return () => { active = false; };
@@ -89,7 +92,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       document.removeEventListener("visibilitychange", refreshOnReturn);
     };
   }, [user?.id]);
-  useEffect(() => { if (hydrated && cartId) void api(`/carts/${cartId}`, "PUT", { cart: state.cart, couponCode: state.couponCode }); }, [cartId, hydrated, state.cart, state.couponCode]);
+  useEffect(() => { if (hydrated && cartId) void api(`/carts/${cartId}`, "PUT", { cart: state.cart, saveForLater: state.saveForLater, couponCode: state.couponCode }); }, [cartId, hydrated, state.cart, state.saveForLater, state.couponCode]);
 
   const cartSubtotal = useMemo(() => state.cart.reduce((sum, line) => sum + (state.products.find((item) => item.id === line.productId)?.price ?? 0) * line.quantity, 0), [state.cart, state.products]);
   const validateCoupon = (code: string | null, lines = state.cart): CouponResult => {
@@ -126,6 +129,25 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     addToCart: (productId, color, quantity = 1) => setState((current) => { const existing = current.cart.find((line) => line.productId === productId && line.color === color); return { ...current, cart: existing ? current.cart.map((line) => line === existing ? { ...line, quantity: line.quantity + quantity } : line) : [...current.cart, { productId, color, quantity }] }; }),
     updateQuantity: (productId, color, quantity) => setState((current) => ({ ...current, cart: quantity <= 0 ? current.cart.filter((line) => line.productId !== productId || line.color !== color) : current.cart.map((line) => line.productId === productId && line.color === color ? { ...line, quantity } : line) })),
     removeFromCart: (productId, color) => setState((current) => ({ ...current, cart: current.cart.filter((line) => line.productId !== productId || line.color !== color) })),
+    saveForLater: (productId, color) => setState((current) => {
+      const line = current.cart.find((l) => l.productId === productId && l.color === color);
+      if (!line) return current;
+      return {
+        ...current,
+        cart: current.cart.filter((l) => !(l.productId === productId && l.color === color)),
+        saveForLater: [...current.saveForLater.filter((l) => !(l.productId === productId && l.color === color)), line]
+      };
+    }),
+    moveToCart: (productId, color) => setState((current) => {
+      const line = current.saveForLater.find((l) => l.productId === productId && l.color === color);
+      if (!line) return current;
+      return {
+        ...current,
+        saveForLater: current.saveForLater.filter((l) => !(l.productId === productId && l.color === color)),
+        cart: [...current.cart.filter((l) => !(l.productId === productId && l.color === color)), line]
+      };
+    }),
+    removeFromSaved: (productId, color) => setState((current) => ({ ...current, saveForLater: current.saveForLater.filter((line) => line.productId !== productId || line.color !== color) })),
     setCouponCode: (couponCode) => setState((current) => ({ ...current, couponCode })),
     placeOrder: async (details) => {
       if (!user || !state.cart.length) return null;

@@ -129,15 +129,28 @@ class StoreApiController extends Controller
         $user = $this->requireUser($request);
         abort_unless($id === 'cart-'.$user->id, 403, 'Cart ownership is required.');
         $cart = DB::table('kitchen_carts')->where('id', $id)->first();
-        return response()->json($cart ? ['cart' => $this->decode($cart->cartLines), 'couponCode' => $cart->couponCode] : ['cart' => [], 'couponCode' => null]);
+        return response()->json($cart ? [
+            'cart' => $this->decode($cart->cartLines),
+            'saveForLater' => $this->decode($cart->saveForLater ?? '[]'),
+            'couponCode' => $cart->couponCode
+        ] : ['cart' => [], 'saveForLater' => [], 'couponCode' => null]);
     }
 
     public function saveCart(Request $request, string $id): JsonResponse
     {
         $user = $this->requireUser($request);
         abort_unless($id === 'cart-'.$user->id, 403, 'Cart ownership is required.');
-        $data = $request->validate(['cart' => ['array'], 'couponCode' => ['nullable', 'string', 'max:80']]);
-        DB::table('kitchen_carts')->updateOrInsert(['id' => $id], ['cartLines' => json_encode($data['cart'] ?? []), 'couponCode' => $data['couponCode'] ?? null, 'updatedAt' => now()]);
+        $data = $request->validate([
+            'cart' => ['array'],
+            'saveForLater' => ['nullable', 'array'],
+            'couponCode' => ['nullable', 'string', 'max:80']
+        ]);
+        DB::table('kitchen_carts')->updateOrInsert(['id' => $id], [
+            'cartLines' => json_encode($data['cart'] ?? []),
+            'saveForLater' => json_encode($data['saveForLater'] ?? []),
+            'couponCode' => $data['couponCode'] ?? null,
+            'updatedAt' => now()
+        ]);
         return response()->json(['success' => true]);
     }
 

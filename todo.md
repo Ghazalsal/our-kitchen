@@ -205,6 +205,13 @@
 
 - [x] Confirm the customer-homepage redesign is synchronized with the connected GitHub `main` branch.
 
+## Order Tracking and Cart Enhancements
+
+- [x] Add a visual delivery-status timeline to the customer order tracking view.
+- [x] Implement a persistent "save for later" feature in the shopping cart with move-to-bag and remove-from-saved actions.
+- [x] Provide Arabic translations for the tracking timeline and save-for-later cart area.
+- [x] Verify the enhanced tracking and cart features visually and with regression coverage.
+
 ---
 
 Note: Production-setting verification and automated off-site backup remain intentionally pending until owner-approved production access and storage requirements are provided.

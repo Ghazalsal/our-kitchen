@@ -95,6 +95,7 @@ export interface StoreState {
   coupons: Coupon[];
   campaigns: Campaign[];
   cart: CartLine[];
+  saveForLater: CartLine[];
   couponCode: string | null;
   orders: Order[];
   notifications: StoreNotification[];

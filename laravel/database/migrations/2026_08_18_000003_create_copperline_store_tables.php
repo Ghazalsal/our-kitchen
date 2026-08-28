@@ -54,6 +54,7 @@ return new class extends Migration
         Schema::create('kitchen_carts', function (Blueprint $table) {
             $table->string('id', 100)->primary();
             $table->json('cartLines')->nullable();
+            $table->json('saveForLater')->nullable();
             $table->string('couponCode', 80)->nullable();
             $table->timestamp('updatedAt')->useCurrent()->useCurrentOnUpdate();
         });
