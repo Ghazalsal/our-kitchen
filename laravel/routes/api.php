@@ -21,6 +21,8 @@ Route::middleware('web')->group(function () {
     Route::post('/catalog/sync', [StoreApiController::class, 'syncCatalog']);
     Route::put('/products/{id}', [StoreApiController::class, 'saveProduct']);
     Route::delete('/products/{id}', [StoreApiController::class, 'deleteProduct']);
+    Route::put('/categories/{id}', [StoreApiController::class, 'saveCategory']);
+    Route::delete('/categories/{id}', [StoreApiController::class, 'deleteCategory']);
     Route::put('/coupons/{id}', [StoreApiController::class, 'saveCoupon']);
     Route::delete('/coupons/{id}', [StoreApiController::class, 'deleteCoupon']);
     Route::put('/campaigns/{id}', [StoreApiController::class, 'saveCampaign']);

@@ -26,6 +26,7 @@ export interface Product {
   colors: string[];
   featured?: boolean;
   deal?: boolean;
+  published?: boolean;
 }
 
 export interface CartLine {

@@ -1,7 +1,7 @@
 /** Copperline Atelier state: Laravel-backed commerce data with a small local cart cache for instant customer interactions. */
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { campaigns, coupons, categories, messages, notifications, orders, products } from "@/lib/seed";
-import type { Campaign, CampaignResult, CartLine, Coupon, CouponResult, Order, OrderStatus, Product, StoreNotification, StoreState, ThreadMessage } from "@/lib/types";
+import type { Campaign, CampaignResult, CartLine, Category, Coupon, CouponResult, Order, OrderStatus, Product, StoreNotification, StoreState, ThreadMessage } from "@/lib/types";
 import { formatILS } from "@/lib/money";
 import { laravelRequest, useAuth } from "@/contexts/AuthContext";
 
@@ -26,6 +26,8 @@ type StoreContextValue = {
   markNotificationsRead: (audience: "admin" | "customer") => void;
   upsertProduct: (product: Product) => void;
   deleteProduct: (id: string) => void;
+  upsertCategory: (category: Category) => void;
+  deleteCategory: (id: string) => void;
   upsertCoupon: (coupon: Coupon) => void;
   deleteCoupon: (id: string) => void;
   upsertCampaign: (campaign: Campaign) => Promise<void>;
@@ -138,6 +140,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     markNotificationsRead: (audience) => { setState((current) => ({ ...current, notifications: current.notifications.map((note) => note.audience === audience ? { ...note, read: true } : note) })); void api("/notifications/read", "POST", { audience }); },
     upsertProduct: (product) => { setState((current) => ({ ...current, products: current.products.some((item) => item.id === product.id) ? current.products.map((item) => item.id === product.id ? product : item) : [product, ...current.products] })); void api(`/products/${product.id}`, "PUT", product); },
     deleteProduct: (id) => { setState((current) => ({ ...current, products: current.products.filter((product) => product.id !== id), cart: current.cart.filter((line) => line.productId !== id) })); void api(`/products/${id}`, "DELETE"); },
+    upsertCategory: (category) => { setState((current) => ({ ...current, categories: current.categories.some((item) => item.id === category.id) ? current.categories.map((item) => item.id === category.id ? category : item) : [category, ...current.categories] })); void api(`/categories/${category.id}`, "PUT", category); },
+    deleteCategory: (id) => { setState((current) => ({ ...current, categories: current.categories.filter((cat) => cat.id !== id) })); void api(`/categories/${id}`, "DELETE"); },
     upsertCoupon: (coupon) => { setState((current) => ({ ...current, coupons: current.coupons.some((item) => item.id === coupon.id) ? current.coupons.map((item) => item.id === coupon.id ? coupon : item) : [coupon, ...current.coupons] })); void api(`/coupons/${coupon.id}`, "PUT", coupon); },
     deleteCoupon: (id) => { setState((current) => ({ ...current, coupons: current.coupons.filter((coupon) => coupon.id !== id) })); void api(`/coupons/${id}`, "DELETE"); },
     upsertCampaign: async (campaign) => { const confirmed = await laravelRequest<Campaign>(`/campaigns/${campaign.id}`, "PUT", campaign); setState((current) => ({ ...current, campaigns: current.campaigns.some((item) => item.id === campaign.id) ? current.campaigns.map((item) => item.id === campaign.id ? confirmed : item) : [confirmed, ...current.campaigns] })); },

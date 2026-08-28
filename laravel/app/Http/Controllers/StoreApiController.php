@@ -49,9 +49,25 @@ class StoreApiController extends Controller
     {
         $this->requireAdmin($request);
         $product = array_merge($request->all(), ['id' => $id]);
-        $request->validate(['name' => ['required', 'string', 'max:200'], 'brand' => ['required', 'string', 'max:120'], 'price' => ['required', 'numeric'], 'categoryId' => ['required', 'string', 'max:80'], 'image' => ['required', 'string']]);
+        $request->validate(['name' => ['required', 'string', 'max:200'], 'brand' => ['required', 'string', 'max:120'], 'price' => ['required', 'numeric'], 'categoryId' => ['required', 'string', 'max:80'], 'image' => ['required', 'string'], 'published' => ['nullable', 'boolean']]);
         $this->upsertProduct($product);
         return response()->json($this->productById($id));
+    }
+
+    public function saveCategory(Request $request, string $id): JsonResponse
+    {
+        $this->requireAdmin($request);
+        $category = array_merge($request->all(), ['id' => $id]);
+        $request->validate(['name' => ['required', 'string', 'max:160'], 'hue' => ['nullable', 'string', 'max:20']]);
+        $this->upsertCategory($category);
+        return response()->json($this->categoryById($id));
+    }
+
+    public function deleteCategory(Request $request, string $id): JsonResponse
+    {
+        $this->requireAdmin($request);
+        DB::table('kitchen_categories')->where('id', $id)->delete();
+        return response()->json(['success' => true]);
     }
 
     public function deleteProduct(Request $request, string $id): JsonResponse
@@ -209,7 +225,19 @@ class StoreApiController extends Controller
         $activity = $this->activityState($user);
         $campaigns = DB::table('kitchen_campaigns')->orderByDesc('priority')->orderBy('startsAt');
         if (!$user || $user->role !== 'admin') $campaigns->where('enabled', true)->where('endsAt', '>', now());
-        return ['products' => DB::table('kitchen_products')->orderByDesc('updated_at')->get()->map(fn ($row) => $this->productRow($row))->all(), 'categories' => DB::table('kitchen_categories')->orderBy('name')->get()->map(fn ($row) => ['id' => $row->id, 'name' => $row->name, 'description' => $row->description, 'image' => $row->image])->all(), 'coupons' => DB::table('kitchen_coupons')->orderByDesc('updated_at')->get()->map(fn ($row) => $this->couponRow($row))->all(), 'campaigns' => $campaigns->get()->map(fn ($row) => $this->campaignRow($row))->all(), ...$activity];
+
+        $productsQuery = DB::table('kitchen_products')->orderByDesc('updated_at');
+        if (!$user || $user->role !== 'admin') {
+            $productsQuery->where('published', true)->where('stock', '>', 0);
+        }
+
+        return [
+            'products' => $productsQuery->get()->map(fn ($row) => $this->productRow($row))->all(),
+            'categories' => DB::table('kitchen_categories')->orderBy('name')->get()->map(fn ($row) => $this->categoryRow($row))->all(),
+            'coupons' => DB::table('kitchen_coupons')->orderByDesc('updated_at')->get()->map(fn ($row) => $this->couponRow($row))->all(),
+            'campaigns' => $campaigns->get()->map(fn ($row) => $this->campaignRow($row))->all(),
+            ...$activity
+        ];
     }
 
     private function activityState(?User $user): array
@@ -223,8 +251,8 @@ class StoreApiController extends Controller
         return ['orders' => $orderRows->map(fn ($row) => $this->orderRow($row))->all(), 'notifications' => $notifications->get()->map(fn ($row) => $this->notificationRow($row))->all(), 'messages' => empty($orderIds) ? [] : DB::table('kitchen_messages')->whereIn('orderId', $orderIds)->orderBy('createdAt')->get()->map(fn ($row) => $this->messageRow($row))->all()];
     }
 
-    private function upsertCategory(array $data): void { DB::table('kitchen_categories')->updateOrInsert(['id' => $data['id']], ['name' => $data['name'], 'description' => $data['description'] ?? '', 'image' => $data['image'] ?? '', 'updated_at' => now(), 'created_at' => now()]); }
-    private function upsertProduct(array $data): void { DB::table('kitchen_products')->updateOrInsert(['id' => $data['id']], ['name' => $data['name'], 'brand' => $data['brand'], 'price' => $data['price'], 'compareAt' => $data['compareAt'] ?? null, 'categoryId' => $data['categoryId'], 'image' => $data['image'], 'gallery' => json_encode($data['gallery'] ?? []), 'description' => $data['description'] ?? '', 'features' => json_encode($data['features'] ?? []), 'stock' => $data['stock'] ?? 0, 'colors' => json_encode($data['colors'] ?? []), 'featured' => !empty($data['featured']), 'deal' => !empty($data['deal']), 'updated_at' => now(), 'created_at' => now()]); }
+    private function upsertCategory(array $data): void { DB::table('kitchen_categories')->updateOrInsert(['id' => $data['id']], ['name' => $data['name'], 'description' => $data['description'] ?? '', 'image' => $data['image'] ?? '', 'hue' => $data['hue'] ?? 'copper', 'updated_at' => now(), 'created_at' => now()]); }
+    private function upsertProduct(array $data): void { DB::table('kitchen_products')->updateOrInsert(['id' => $data['id']], ['name' => $data['name'], 'brand' => $data['brand'], 'price' => $data['price'], 'compareAt' => $data['compareAt'] ?? null, 'categoryId' => $data['categoryId'], 'image' => $data['image'], 'gallery' => json_encode($data['gallery'] ?? []), 'description' => $data['description'] ?? '', 'features' => json_encode($data['features'] ?? []), 'stock' => $data['stock'] ?? 0, 'colors' => json_encode($data['colors'] ?? []), 'featured' => !empty($data['featured']), 'deal' => !empty($data['deal']), 'published' => (bool) ($data['published'] ?? true), 'updated_at' => now(), 'created_at' => now()]); }
     private function upsertCoupon(array $data): void { DB::table('kitchen_coupons')->updateOrInsert(['id' => $data['id']], ['code' => strtoupper($data['code']), 'type' => $data['type'], 'value' => $data['value'], 'minSpend' => $data['minSpend'] ?? 0, 'maxDiscount' => $data['maxDiscount'] ?? null, 'usageLimit' => $data['usageLimit'] ?? 0, 'uses' => $data['uses'] ?? 0, 'expiresAt' => $data['expiresAt'], 'active' => $data['active'] ?? true, 'categoryIds' => json_encode($data['categoryIds'] ?? []), 'updated_at' => now(), 'created_at' => now()]); }
     private function upsertCampaign(array $data): void { DB::table('kitchen_campaigns')->updateOrInsert(['id' => $data['id']], ['name' => $data['name'], 'type' => $data['type'], 'value' => $data['value'] ?? 0, 'minSpend' => $data['minSpend'] ?? 0, 'maxDiscount' => $data['maxDiscount'] ?? null, 'targetType' => $data['targetType'], 'targetValues' => json_encode($data['targetValues'] ?? []), 'startsAt' => $data['startsAt'], 'endsAt' => $data['endsAt'], 'enabled' => $data['enabled'] ?? true, 'priority' => $data['priority'] ?? 0, 'updated_at' => now(), 'created_at' => now()]); }
     private function productById(string $id): ?array { $row = DB::table('kitchen_products')->where('id', $id)->first(); return $row ? $this->productRow($row) : null; }
@@ -235,7 +263,9 @@ class StoreApiController extends Controller
     private function requireUser(Request $request): User { $user = $request->user(); abort_unless($user instanceof User, 401, 'Please sign in to continue.'); return $user; }
     private function requireVerifiedUser(Request $request): User { $user = $this->requireUser($request); abort_unless($user->hasVerifiedEmail(), 403, 'Verify your email before placing an order.'); return $user; }
     private function requireAdmin(Request $request): void { $user = $this->requireUser($request); abort_unless($user->role === 'admin', 403, 'Administrator authorization is required.'); }
-    private function productRow(object $row): array { return ['id' => $row->id, 'name' => $row->name, 'brand' => $row->brand, 'price' => (float) $row->price, 'compareAt' => $row->compareAt ? (float) $row->compareAt : null, 'categoryId' => $row->categoryId, 'image' => $row->image, 'gallery' => $this->decode($row->gallery), 'description' => $row->description, 'features' => $this->decode($row->features), 'stock' => (int) $row->stock, 'colors' => $this->decode($row->colors), 'featured' => (bool) $row->featured, 'deal' => (bool) $row->deal]; }
+    private function productRow(object $row): array { return ['id' => $row->id, 'name' => $row->name, 'brand' => $row->brand, 'price' => (float) $row->price, 'compareAt' => $row->compareAt ? (float) $row->compareAt : null, 'categoryId' => $row->categoryId, 'image' => $row->image, 'gallery' => $this->decode($row->gallery), 'description' => $row->description, 'features' => $this->decode($row->features), 'stock' => (int) $row->stock, 'colors' => $this->decode($row->colors), 'featured' => (bool) $row->featured, 'deal' => (bool) $row->deal, 'published' => (bool) $row->published]; }
+    private function categoryRow(object $row): array { return ['id' => $row->id, 'name' => $row->name, 'description' => $row->description, 'image' => $row->image, 'hue' => $row->hue ?? 'copper']; }
+    private function categoryById(string $id): ?array { $row = DB::table('kitchen_categories')->where('id', $id)->first(); return $row ? $this->categoryRow($row) : null; }
     private function couponRow(object $row): array { return ['id' => $row->id, 'code' => $row->code, 'type' => $row->type, 'value' => (float) $row->value, 'minSpend' => (float) $row->minSpend, 'maxDiscount' => $row->maxDiscount ? (float) $row->maxDiscount : null, 'usageLimit' => (int) $row->usageLimit, 'uses' => (int) $row->uses, 'expiresAt' => (string) $row->expiresAt, 'active' => (bool) $row->active, 'categoryIds' => $this->decode($row->categoryIds)]; }
     private function campaignRow(object $row): array { return ['id' => $row->id, 'name' => $row->name, 'type' => $row->type, 'value' => (float) $row->value, 'minSpend' => (float) $row->minSpend, 'maxDiscount' => $row->maxDiscount ? (float) $row->maxDiscount : null, 'targetType' => $row->targetType, 'targetValues' => $this->decode($row->targetValues), 'startsAt' => (string) $row->startsAt, 'endsAt' => (string) $row->endsAt, 'enabled' => (bool) $row->enabled, 'priority' => (int) $row->priority]; }
     private function orderRow(object $row): array { return ['id' => $row->id, 'createdAt' => (string) $row->createdAt, 'status' => $row->status, 'customerName' => $row->customerName, 'customerEmail' => $row->customerEmail, 'address' => $row->address, 'subtotal' => (float) $row->subtotal, 'discount' => (float) $row->discount, 'shipping' => (float) $row->shipping, 'total' => (float) $row->total, 'couponCode' => $row->couponCode, 'campaignId' => $row->campaignId ?? null, 'lines' => DB::table('kitchen_order_lines')->where('orderId', $row->id)->get()->map(fn ($line) => ['productId' => $line->productId, 'color' => $line->color, 'quantity' => (int) $line->quantity, 'name' => $line->name, 'price' => (float) $line->price, 'image' => $line->image])->all()]; }

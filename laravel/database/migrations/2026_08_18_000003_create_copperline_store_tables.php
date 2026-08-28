@@ -11,8 +11,9 @@ return new class extends Migration
         Schema::create('kitchen_categories', function (Blueprint $table) {
             $table->string('id', 80)->primary();
             $table->string('name', 160);
-            $table->text('description');
-            $table->text('image');
+            $table->text('description')->nullable();
+            $table->text('image')->nullable();
+            $table->string('hue', 20)->default('copper');
             $table->timestamps();
         });
 
@@ -31,6 +32,7 @@ return new class extends Migration
             $table->json('colors')->nullable();
             $table->boolean('featured')->default(false);
             $table->boolean('deal')->default(false);
+            $table->boolean('published')->default(true);
             $table->timestamps();
         });
 
