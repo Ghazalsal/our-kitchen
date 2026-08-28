@@ -194,3 +194,17 @@
 
 - [x] Create a target-neutral, MySQL-compatible schema and migration handoff for the current Laravel application.
 - [x] Document the secure import, validation, cutover, and rollback process for the user’s local MySQL test run.
+
+## Customer Homepage Discovery Redesign
+
+- [x] Re-sequence the homepage after the hero so customers reach catalog discovery before supporting trust and editorial content.
+- [x] Add image-led horizontal scrolling rails for categories, featured products, and Dorsha tableware with responsive card sizing and accessible links.
+- [x] Verify the redesigned homepage visually and preserve the responsive Copperline Atelier presentation.
+
+## Repository Synchronization
+
+- [x] Confirm the customer-homepage redesign is synchronized with the connected GitHub `main` branch.
+
+---
+
+Note: Production-setting verification and automated off-site backup remain intentionally pending until owner-approved production access and storage requirements are provided.
