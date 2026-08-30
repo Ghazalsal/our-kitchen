@@ -4,7 +4,18 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\StoreApiController;
 use App\Http\Controllers\AuthController;
 
-Route::get('/manus-storage/{key}', [StoreApiController::class, 'serveMedia'])->where('key', '.*');
+Route::get('/media/{key}', [StoreApiController::class, 'serveMedia'])->where('key', '.*');
+Route::get('/{directory}/{file}', function (string $directory, string $file) {
+    abort_unless(in_array($directory, ['images', 'catalog'], true), 404);
+    abort_unless(preg_match('/^[A-Za-z0-9._-]+$/', $file), 404);
+    $path = public_path($directory.'/'.$file);
+    if (!is_file($path)) $path = base_path('../dist/public/'.$directory.'/'.$file);
+    abort_unless(is_file($path), 404);
+    return response()->file($path, [
+        'Cache-Control' => 'public, max-age=31536000, immutable',
+        'X-Content-Type-Options' => 'nosniff',
+    ]);
+})->where(['directory' => 'images|catalog', 'file' => '[A-Za-z0-9._-]+']);
 
 Route::get('/verify-email/{id}/{hash}', [AuthController::class, 'verifyEmail'])
     ->middleware(['signed', 'throttle:6,1'])

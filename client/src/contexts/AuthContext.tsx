@@ -41,6 +41,23 @@ export async function laravelRequest<T>(path: string, method = "GET", body?: unk
   return data;
 }
 
+export async function laravelFormRequest<T>(path: string, form: FormData): Promise<T> {
+  await refreshCsrf();
+  const send = () => {
+    const headers: Record<string, string> = { Accept: "application/json" };
+    const token = sessionCsrfToken;
+    if (token) headers["X-CSRF-TOKEN"] = token;
+    const encryptedToken = csrfToken();
+    if (encryptedToken) headers["X-XSRF-TOKEN"] = encryptedToken;
+    return fetch(`/api${path}`, { method: "POST", headers, credentials: "same-origin", body: form });
+  };
+  let response = await send();
+  if (response.status === 419) { await refreshCsrf(); response = await send(); }
+  const data = await response.json().catch(() => ({})) as T & { message?: string; errors?: Record<string, string[]> };
+  if (!response.ok) throw new Error(data.message ?? Object.values(data.errors ?? {}).flat().join(" ") ?? "Something went wrong.");
+  return data;
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<KitchenUser | null>(null);
   const [loading, setLoading] = useState(true);

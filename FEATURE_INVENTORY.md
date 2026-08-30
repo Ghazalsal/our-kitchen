@@ -1,7 +1,7 @@
 # Our Kitchen — Delivered Feature Inventory
 
 **Product:** Our Kitchen — Copper & Co.  
-**Current implementation:** React storefront with Laravel PHP API, TiDB persistence, managed product-media storage, bilingual customer experience, and role-secured administration.
+**Current implementation:** React storefront with Laravel PHP API, TiDB/MySQL-compatible persistence, Injazat application-owned product/category media, bilingual customer experience, and role-secured administration.
 
 ## 1. Feature status at a glance
 
@@ -13,7 +13,7 @@
 | Commerce operations | Product, inventory, order, coupon, campaign, notification, and customer-message administration | Implemented |
 | Persistence | TiDB/MySQL commerce, account, session, cache, and password-reset data | Implemented |
 | Localization | English/Arabic switching, URL state, Arabic typography, and RTL behavior | Implemented |
-| Storage | Managed S3-backed product-image upload and media serving | Implemented |
+| Storage | Application-owned product/category uploads, MySQL metadata, bundled catalog imagery, and persistent-volume media serving | Implemented; Injazat volume mount required |
 | Email | Safe local verification/reset mail logging and environment-driven production mail configuration | Development ready; production provider required |
 | Notifications | Persisted customer and administrator activity refreshes every 30 seconds in active browser sessions | Implemented |
 | Payments | Payment collection integration | Not connected yet |
@@ -31,10 +31,10 @@ Delivered brand and installability work includes the supplied Our Kitchen logo a
 | Home | Announcement ticker, sticky navigation, global product search, cart access, timed-campaign countdown, Dorsha kitchenware discovery, category/product merchandising, deal presentation, trust/value sections, newsletter area, and site footer |
 | Shop | Product browsing with category, price, and brand filters; sorting and search |
 | Product detail | Image gallery, product variants/finishes, quantity selection, specifications/features, and related-product discovery |
-| Cart | Cart drawer and cart page, line-item quantity controls, removal, coupon entry, and live totals |
+| Cart | Cart drawer and cart page, line-item quantity controls, removal, persistent save-for-later area, coupon entry, and live totals |
 | Checkout | Delivery address capture, session-owned name/email, ILS totals, coupon and campaign calculations, authenticated-user enforcement, and server-confirmed order placement |
 | Deals | Dedicated discounted-product surface |
-| Tracking | Customer-owned order history, status tracking, customer/admin message thread, and notifications |
+| Tracking | Customer-owned order history, visual delivery-status timeline, customer/admin message thread, and notifications |
 | Navigation | Responsive header/footer and a mobile bottom navigation pattern |
 
 All monetary displays use locale-aware **Israeli shekel (ILS / ₪)** formatting. The cart and checkout calculate subtotal, shipping, coupon discounts, and total in real time.
@@ -64,7 +64,7 @@ An administrator must still use a real account email and password, but Laravel m
 | Access control | Laravel role check on frontend routes and all protected server mutations |
 | Dashboard | Revenue, order, low-stock, and notification indicators; recent-order and inbox views |
 | Product library | Create, edit, and delete products; pricing, stock, category, imagery, descriptions, features, finishes, and merchandising flags |
-| Product media | Image upload to managed storage and reusable stored image URLs |
+| Product and category media | Administrator-only image uploads to application-owned persistent storage with reusable `/media/...` URLs |
 | Order desk | Review orders, change status, inspect delivery/order details, and reply to customers |
 | Coupon desk | Create, edit, and remove percentage, fixed, and free-shipping offers |
 | Campaign desk | Create, edit, and remove time-aware percentage, fixed, and free-shipping campaigns with all-store, maker/brand, or category targeting and priority |
@@ -72,7 +72,7 @@ An administrator must still use a real account email and password, but Laravel m
 
 ## 7. Laravel backend and persistent data
 
-The project’s commerce backend is Laravel PHP, served with the React build. Its REST API handles account, catalog, cart, order, message, notification, coupon, and product-media operations. The Node API scaffold is no longer the active commerce backend.
+The project’s commerce backend is Laravel PHP, served with the React build. Its REST API handles account, catalog, cart, order, message, notification, coupon, campaign, and product/category media operations. The Node API scaffold is no longer the active commerce backend.
 
 Persistent TiDB/MySQL storage covers the following data areas:
 
@@ -82,7 +82,7 @@ Persistent TiDB/MySQL storage covers the following data areas:
 | Commerce | Carts, orders, order lines, coupon rules/usage, messages, and notifications |
 | Accounts | Users, roles, verification timestamps, login timestamps, password-reset tokens, and encrypted database sessions |
 | Security services | Database-backed cache and cache locks used by Laravel rate limiting |
-| Media | Managed storage keys, media URLs, filename, content type, and size metadata |
+| Media | Product/category ownership, application-storage keys, media URLs, filename, verified content type, and size metadata |
 
 Authenticated carts are bound to `cart-{user.id}`. The backend checks cart ownership, order ownership, and role authorization. Checkout retains the cart until Laravel confirms the order; an expired session is returned to the customer rather than being shown as a successful order. Campaign discounts are recalculated on the server according to campaign timing and eligibility.
 
@@ -116,15 +116,17 @@ The application supports English and Arabic. The visible language switcher persi
 
 ## 12. File storage and media delivery
 
-Product images are uploaded through the protected Laravel media endpoint to managed Forge S3 storage. The application records file metadata in the database and serves images through a Laravel media proxy route. Product-media mutation is administrator-only.
+Product and category images are uploaded through the protected Laravel media endpoint to the application-owned `kitchen_media` disk. The image bytes live in the Injazat persistent media volume, while MySQL stores ownership, path, filename, content type, and size metadata. Customer-facing files are served through constrained `/media/...` routes with explicit content types, immutable caching, and content-sniffing protection. Uploads are administrator-only.
+
+The application logo is a bundled PNG in `client/public/images`, and the seed catalog imagery is bundled in `client/public/catalog`. Header, footer, browser icon, install manifest, hero, categories, and products no longer depend on Manus media URLs. Injazat must retain a writable persistent volume at `/var/www/html/storage/app/kitchen-media` for runtime uploads.
 
 ## 13. Production runtime
 
-The project has a multi-stage production Docker runtime that builds the React storefront and serves it through Laravel PHP. The Laravel routes include API, single-page-app fallback, media proxy, password reset, email verification, and web-app manifest handling.
+The project has a multi-stage production Docker runtime that builds the React storefront and serves it through Laravel PHP. The Laravel routes include API, single-page-app fallback, application-owned media delivery, password reset, email verification, and web-app manifest handling.
 
 ## 14. Validation completed
 
-The implemented system has been validated with TypeScript checks, PHP syntax checks, Laravel behavior tests, browser screenshots, and **26 passing Vitest regression tests**. Validation covers campaign timing and server-side discount rules, scoped activity polling, phone normalization and duplicate rejection, customer sessions, separate administrator access, and CSRF-backed authentication flows.
+The implemented system has been validated with TypeScript checks, PHP syntax checks, Laravel behavior tests, browser screenshots, and **28 passing Vitest regression tests**. Validation covers campaign timing and server-side discount rules, scoped activity polling, phone normalization and duplicate rejection, customer sessions, separate administrator access, CSRF-backed authentication, local branding, and application-owned media flows. The media behavior test adds 10 assertions for administrator upload authorization, filesystem persistence, MySQL metadata, and safe serving.
 
 ## 16. Campaigns, notifications, and recovery guidance
 

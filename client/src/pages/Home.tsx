@@ -7,8 +7,8 @@ import { ProductCard } from "@/components/ProductCard";
 import { useStore } from "@/contexts/StoreContext";
 import { formatILS } from "@/lib/money";
 
-const hero = "/manus-storage/our-kitchen-hero_5efbd6f3.jpg";
-const baking = "/manus-storage/our-kitchen-baking_12b30794.jpg";
+const hero = "/catalog/hero.webp";
+const baking = "/catalog/baking.webp";
 
 export default function Home() {
   const { state } = useStore();

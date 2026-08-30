@@ -6,19 +6,23 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class StoreApiController extends Controller
 {
     public function serveMedia(string $key)
     {
-        $forgeUrl = rtrim((string) env('BUILT_IN_FORGE_API_URL'), '/');
-        $forgeKey = (string) env('BUILT_IN_FORGE_API_KEY');
-        abort_unless($forgeUrl && $forgeKey, 503, 'Managed storage is not configured.');
-        $url = Http::withToken($forgeKey)->get($forgeUrl.'/v1/storage/presign/get', ['path' => ltrim($key, '/')])->throw()->json('url');
-        abort_unless($url, 404, 'Media file was not found.');
-        return redirect()->away($url);
+        abort_unless(preg_match('#^(products|categories)/[a-f0-9-]+\.(?:jpg|jpeg|png|webp|avif)$#i', $key), 404);
+        $disk = Storage::disk(config('kitchen.media_disk'));
+        abort_unless($disk->exists($key), 404, 'Media file was not found.');
+
+        return response($disk->get($key), 200, [
+            'Content-Type' => $disk->mimeType($key) ?: 'application/octet-stream',
+            'Content-Disposition' => 'inline; filename="'.basename($key).'"',
+            'Cache-Control' => 'public, max-age=31536000, immutable',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
     }
 
     public function bootstrap(Request $request): JsonResponse
@@ -218,18 +222,35 @@ class StoreApiController extends Controller
     public function uploadMedia(Request $request): JsonResponse
     {
         $this->requireAdmin($request);
-        $request->validate(['file' => ['required', 'file', 'image', 'max:5120']]);
+        $data = $request->validate([
+            'file' => ['required', 'file', 'image', 'mimes:jpg,jpeg,png,webp,avif', 'max:5120'],
+            'purpose' => ['nullable', 'in:product,category'],
+            'entityId' => ['nullable', 'string', 'max:80'],
+        ]);
         $file = $request->file('file');
-        $forgeUrl = rtrim((string) env('BUILT_IN_FORGE_API_URL'), '/');
-        $forgeKey = (string) env('BUILT_IN_FORGE_API_KEY');
-        abort_unless($forgeUrl && $forgeKey, 503, 'Managed storage is not configured.');
-        $extension = $file->extension() ?: 'jpg';
-        $key = 'our-kitchen/products/'.Str::uuid().'.'.$extension;
-        $presigned = Http::withToken($forgeKey)->get($forgeUrl.'/v1/storage/presign/put', ['path' => $key])->throw()->json('url');
-        abort_unless($presigned, 502, 'Storage did not provide an upload URL.');
-        Http::withBody(file_get_contents($file->getRealPath()), $file->getMimeType())->put($presigned)->throw();
-        $url = '/manus-storage/'.$key;
-        DB::table('kitchen_media_files')->insert(['id' => 'media-'.Str::uuid(), 'storageKey' => $key, 'url' => $url, 'filename' => $file->getClientOriginalName(), 'contentType' => $file->getMimeType(), 'size' => $file->getSize(), 'created_at' => now(), 'updated_at' => now()]);
+        $extension = match ($file->getMimeType()) {
+            'image/jpeg' => 'jpg',
+            'image/png' => 'png',
+            'image/webp' => 'webp',
+            'image/avif' => 'avif',
+            default => abort(422, 'Unsupported image format.'),
+        };
+        $folder = ($data['purpose'] ?? 'product') === 'category' ? 'categories' : 'products';
+        $key = $folder.'/'.Str::uuid().'.'.$extension;
+        Storage::disk(config('kitchen.media_disk'))->put($key, file_get_contents($file->getRealPath()));
+        $url = '/media/'.$key;
+        DB::table('kitchen_media_files')->insert([
+            'id' => 'media-'.Str::uuid(),
+            'purpose' => $data['purpose'] ?? 'product',
+            'entityId' => $data['entityId'] ?? null,
+            'storageKey' => $key,
+            'url' => $url,
+            'filename' => basename($file->getClientOriginalName()),
+            'contentType' => $file->getMimeType(),
+            'size' => $file->getSize(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
         return response()->json(['key' => $key, 'url' => $url], 201);
     }
 

@@ -1,18 +1,18 @@
 /** Copperline Atelier seed: tactile kitchen appliance catalogue and working sample commerce data. */
 import type { Campaign, Category, Coupon, Order, Product, StoreNotification, ThreadMessage } from "./types";
 
-const hero = "/manus-storage/our-kitchen-hero_5efbd6f3.jpg";
-const espresso = "/manus-storage/our-kitchen-espresso_f659044b.jpg";
-const baking = "/manus-storage/our-kitchen-baking_12b30794.jpg";
-const prep = "/manus-storage/our-kitchen-prep_a5c67760.jpg";
-const kettle = "/manus-storage/our-kitchen-kettle_ceb87d69.jpg";
-const blender = "/manus-storage/our-kitchen-blender_8d88c11f.jpg";
-const grill = "/manus-storage/our-kitchen-grill_c38febf9.jpg";
-const toaster = "/manus-storage/our-kitchen-toaster_5bfd81c0.jpg";
-const dorshaServing = "/manus-storage/dorsha-serving-bowl_6af95bde.webp";
-const dorshaCups = "/manus-storage/dorsha-cups-bowls_37c3f7bb.jpeg";
-const dorshaPlates = "/manus-storage/dorsha-plates_c109b6df.jpg";
-const dorshaCutlery = "/manus-storage/dorsha-cutlery_7ca62216.jpg";
+const hero = "/catalog/hero.webp";
+const espresso = "/catalog/espresso.webp";
+const baking = "/catalog/baking.webp";
+const prep = "/catalog/prep.webp";
+const kettle = "/catalog/kettle.webp";
+const blender = "/catalog/blender.webp";
+const grill = "/catalog/grill.webp";
+const toaster = "/catalog/toaster.webp";
+const dorshaServing = "/catalog/dorsha-serving.jpg";
+const dorshaCups = "/catalog/dorsha-cups.jpeg";
+const dorshaPlates = "/catalog/dorsha-plates.jpg";
+const dorshaCutlery = "/catalog/dorsha-cutlery.jpg";
 
 export const categories: Category[] = [
   { id: "brew", name: "Brew & pour", description: "Coffee, tea and the unhurried cup.", image: espresso, hue: "copper" },

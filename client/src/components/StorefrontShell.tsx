@@ -8,7 +8,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { formatILS } from "@/lib/money";
 import { useAuth } from "@/contexts/AuthContext";
 
-const mark = "/manus-storage/our-kitchen-app-icon_ce4e2e34.png";
+const mark = "/images/logo.png";
 
 export function Wordmark({ dark = false }: { dark?: boolean }) {
   return <Link href="/" className={`group inline-flex items-center gap-2.5 ${dark ? "text-[#FAF6F0]" : "text-[#17130F]"}`}>

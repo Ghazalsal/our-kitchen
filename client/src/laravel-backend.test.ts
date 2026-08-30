@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 const root = "/home/ubuntu/our-kitchen";
@@ -33,7 +33,7 @@ describe("Laravel commerce backend", () => {
     expect(store).toContain("orders: [confirmed");
     expect(checkout).toContain("Your cart has been kept intact");
     expect(controller).toContain("kitchen_media_files");
-    expect(controller).toContain("v1/storage/presign/put");
+    expect(controller).toContain("Storage::disk(config('kitchen.media_disk'))");
   });
 
   it("uses rate-limited secure account endpoints with database-backed cache support", () => {
@@ -146,8 +146,8 @@ describe("Laravel commerce backend", () => {
   it("serves an installable multi-size web-app manifest", () => {
     const manifest = read("client/public/manifest.webmanifest");
     const routes = read("laravel/routes/web.php");
-    expect(manifest).toContain("our-kitchen-icon-192");
-    expect(manifest).toContain("our-kitchen-icon-512");
+    expect(manifest).toContain("/images/icon-192.png");
+    expect(manifest).toContain("/images/icon-512.png");
     expect(manifest).toContain('"display": "standalone"');
     expect(routes).toContain("/manifest.webmanifest");
   });
@@ -261,5 +261,37 @@ describe("Laravel commerce backend", () => {
     expect(handoff).toContain("Do not migrate. Invalidate.");
     expect(handoff).toContain("SESSION_SECURE_COOKIE=true");
     expect(handoff).toContain("Persistent-table counts and relationships reconcile.");
+  });
+
+  it("stores new product and category media in the application with database metadata", () => {
+    const controller = read("laravel/app/Http/Controllers/StoreApiController.php");
+    const filesystems = read("laravel/config/filesystems.php");
+    const routes = read("laravel/routes/web.php");
+    const admin = read("client/src/pages/Admin.tsx");
+    const auth = read("client/src/contexts/AuthContext.tsx");
+    const mediaMigration = read("laravel/database/migrations/2026_08_30_000007_add_media_ownership_fields.php");
+    const seed = read("client/src/lib/seed.ts");
+    const home = read("client/src/pages/Home.tsx");
+    const shell = read("client/src/components/StorefrontShell.tsx");
+    const index = read("client/index.html");
+    const manifest = read("client/public/manifest.webmanifest");
+
+    expect(filesystems).toContain("'kitchen_media'");
+    expect(controller).toContain("'purpose' => ['nullable', 'in:product,category']");
+    expect(controller).toContain("$url = '/media/'.$key");
+    expect(controller).toContain("'X-Content-Type-Options' => 'nosniff'");
+    expect(routes).toContain("Route::get('/media/{key}'");
+    expect(admin).toContain('uploadCatalogImage(file, "product"');
+    expect(admin).toContain('uploadCatalogImage(file, "category"');
+    expect(auth).toContain("export async function laravelFormRequest");
+    expect(mediaMigration).toContain("$table->string('purpose', 20)");
+    expect(mediaMigration).toContain("$table->string('entityId', 80)");
+    expect(seed).not.toContain("/manus-storage/");
+    expect(home).not.toContain("/manus-storage/");
+    expect(shell).toContain('const mark = "/images/logo.png"');
+    expect(index).toContain('href="/images/logo.png"');
+    expect(manifest).not.toContain("/manus-storage/");
+    expect(existsSync(`${root}/client/public/images/logo.png`)).toBe(true);
+    expect(existsSync(`${root}/client/public/catalog/hero.webp`)).toBe(true);
   });
 });

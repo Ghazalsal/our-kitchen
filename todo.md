@@ -212,6 +212,16 @@
 - [x] Provide Arabic translations for the tracking timeline and save-for-later cart area.
 - [x] Verify the enhanced tracking and cart features visually and with regression coverage.
 
+## Application-Owned Media Storage & Branding
+
+- [x] Download the application logo as a local PNG and update all branding references (header, footer, favicon, manifest).
+- [x] Switch product and category image uploads from Manus object storage to the application's own persistent filesystem for Injazat deployment.
+- [x] Store product/category media paths and safe metadata in MySQL without storing image BLOBs.
+- [x] Implement secure application-side media serving and administrator-only upload access for uploaded files.
+- [x] Preserve existing product and category media references while new uploads use application-owned storage.
+- [x] Verify file validation, CSRF-protected uploads, MySQL metadata, safe media responses, bundled branding, and catalog rendering in the development environment.
+- [ ] Confirm cross-restart upload persistence on Injazat after mounting `/var/www/html/storage/app/kitchen-media` as a persistent writable volume.
+
 ---
 
 Note: Production-setting verification and automated off-site backup remain intentionally pending until owner-approved production access and storage requirements are provided.
