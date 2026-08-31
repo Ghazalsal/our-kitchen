@@ -219,15 +219,25 @@ class StoreApiController extends Controller
         return response()->json(['success' => true]);
     }
 
+    
     public function uploadMedia(Request $request): JsonResponse
     {
         $this->requireAdmin($request);
+
         $data = $request->validate([
-            'file' => ['required', 'file', 'image', 'mimes:jpg,jpeg,png,webp,avif', 'max:5120'],
+            'file' => [
+                'required',
+                'file',
+                'image',
+                'mimes:jpg,jpeg,png,webp,avif',
+                'max:5120',
+            ],
             'purpose' => ['nullable', 'in:product,category'],
             'entityId' => ['nullable', 'string', 'max:80'],
         ]);
+
         $file = $request->file('file');
+
         $extension = match ($file->getMimeType()) {
             'image/jpeg' => 'jpg',
             'image/png' => 'png',
@@ -235,13 +245,29 @@ class StoreApiController extends Controller
             'image/avif' => 'avif',
             default => abort(422, 'Unsupported image format.'),
         };
-        $folder = ($data['purpose'] ?? 'product') === 'category' ? 'categories' : 'products';
-        $key = $folder.'/'.Str::uuid().'.'.$extension;
-        Storage::disk(config('kitchen.media_disk'))->put($key, file_get_contents($file->getRealPath()));
-        $url = '/media/'.$key;
+
+        $purpose = $data['purpose'] ?? 'product';
+
+        $folder = $purpose === 'category'
+            ? 'categories'
+            : 'products';
+
+        $key = $folder . '/' . Str::uuid() . '.' . $extension;
+
+        $diskName = config('kitchen.media_disk', 'kitchen_media');
+
+        $disk = Storage::disk($diskName);
+
+        $disk->put(
+            $key,
+            fopen($file->getRealPath(), 'r')
+        );
+
+        $url = '/media/' . $key;
+
         DB::table('kitchen_media_files')->insert([
-            'id' => 'media-'.Str::uuid(),
-            'purpose' => $data['purpose'] ?? 'product',
+            'id' => 'media-' . Str::uuid(),
+            'purpose' => $purpose,
             'entityId' => $data['entityId'] ?? null,
             'storageKey' => $key,
             'url' => $url,
@@ -251,8 +277,14 @@ class StoreApiController extends Controller
             'created_at' => now(),
             'updated_at' => now(),
         ]);
-        return response()->json(['key' => $key, 'url' => $url], 201);
+
+        return response()->json([
+            'key' => $key,
+            'url' => $url,
+        ], 201);
     }
+
+
 
     private function storeState(?User $user): array
     {
