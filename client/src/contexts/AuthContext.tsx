@@ -28,8 +28,25 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 const cookie = (name: string) => document.cookie.split("; ").find((item) => item.startsWith(`${name}=`))?.slice(name.length + 1);
 const csrfToken = () => { const value = cookie("XSRF-TOKEN"); try { return value ? decodeURIComponent(value) : undefined; } catch { return undefined; } };
 let sessionCsrfToken: string | undefined;
-const refreshCsrf = async () => { const response = await fetch("/api/auth/csrf", { credentials: "same-origin", cache: "no-store" }); const data = await response.json().catch(() => ({})) as { token?: string }; sessionCsrfToken = data.token; return response; };
+const refreshCsrf = async () => {
+  const response = await fetch("/api/auth/csrf", {
+    credentials: "same-origin",
+    cache: "no-store",
+  });
 
+  const data = await response.json().catch(() => ({})) as { token?: string };
+
+  console.log("CSRF response:", data);
+  console.log("XSRF cookie:", cookie("XSRF-TOKEN"));
+
+  sessionCsrfToken = data.token;
+
+  return response;
+};
+console.log("UPLOAD CSRF:", {
+  sessionCsrfToken,
+  encryptedToken: csrfToken(),
+});
 export async function laravelRequest<T>(path: string, method = "GET", body?: unknown): Promise<T> {
   const mutation = method !== "GET";
   if (mutation) await refreshCsrf();
