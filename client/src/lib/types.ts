@@ -24,6 +24,7 @@ export interface Product {
   features: string[];
   stock: number;
   colors: string[];
+  sizes: string[];
   featured?: boolean;
   deal?: boolean;
   published?: boolean;
@@ -33,6 +34,7 @@ export interface CartLine {
   productId: string;
   quantity: number;
   color: string;
+  size: string;
 }
 
 export interface Coupon {
@@ -42,10 +44,12 @@ export interface Coupon {
   value: number;
   minSpend: number;
   maxDiscount?: number;
-  usageLimit: number;
+  /** Maximum number of redemptions. Leave unset (or 0) for unlimited use. */
+  usageLimit?: number | null;
   uses: number;
   expiresAt: string;
   categoryIds?: string[];
+  productIds?: string[];
   active: boolean;
 }
 
@@ -54,6 +58,8 @@ export interface OrderLine extends CartLine {
   price: number;
   image: string;
 }
+
+export type FulfillmentMethod = "delivery" | "pickup";
 
 export interface Order {
   id: string;
@@ -69,6 +75,7 @@ export interface Order {
   customerName: string;
   customerEmail: string;
   address: string;
+  fulfillment: FulfillmentMethod;
 }
 
 export interface StoreNotification {

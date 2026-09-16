@@ -14,16 +14,16 @@ type StoreContextValue = {
   state: StoreState;
   cartCount: number;
   cartSubtotal: number;
-  addToCart: (productId: string, color: string, quantity?: number) => void;
-  updateQuantity: (productId: string, color: string, quantity: number) => void;
-  removeFromCart: (productId: string, color: string) => void;
-  saveForLater: (productId: string, color: string) => void;
-  moveToCart: (productId: string, color: string) => void;
-  removeFromSaved: (productId: string, color: string) => void;
+  addToCart: (productId: string, color: string, size?: string, quantity?: number) => void;
+  updateQuantity: (productId: string, color: string, size: string, quantity: number) => void;
+  removeFromCart: (productId: string, color: string, size: string) => void;
+  saveForLater: (productId: string, color: string, size: string) => void;
+  moveToCart: (productId: string, color: string, size: string) => void;
+  removeFromSaved: (productId: string, color: string, size: string) => void;
   setCouponCode: (code: string | null) => void;
   validateCoupon: (code: string | null, lines?: CartLine[]) => CouponResult;
   campaignResult: (lines?: CartLine[]) => CampaignResult;
-  placeOrder: (details: Pick<Order, "customerName" | "customerEmail" | "address">) => Promise<Order | null>;
+  placeOrder: (details: Pick<Order, "customerName" | "customerEmail" | "address" | "fulfillment">) => Promise<Order | null>;
   updateOrderStatus: (orderId: string, status: OrderStatus) => void;
   sendMessage: (orderId: string, sender: "admin" | "customer", body: string) => void;
   markNotificationsRead: (audience: "admin" | "customer") => void;
@@ -101,9 +101,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     const subtotal = lines.reduce((sum, line) => sum + (state.products.find((item) => item.id === line.productId)?.price ?? 0) * line.quantity, 0);
     if (!coupon || !coupon.active) return { valid: false, message: "That kitchen code is not active.", discount: 0, freeShipping: false };
     if (new Date(coupon.expiresAt) < new Date()) return { valid: false, message: "That kitchen code has expired.", discount: 0, freeShipping: false };
-    if (coupon.uses >= coupon.usageLimit) return { valid: false, message: "That kitchen code has reached its limit.", discount: 0, freeShipping: false };
+    if (coupon.usageLimit && coupon.uses >= coupon.usageLimit) return { valid: false, message: "That kitchen code has reached its limit.", discount: 0, freeShipping: false };
     if (subtotal < coupon.minSpend) return { valid: false, message: `Add ${formatILS(coupon.minSpend - subtotal)} more to use this code.`, discount: 0, freeShipping: false };
     if (coupon.categoryIds?.length && lines.some((line) => !coupon.categoryIds?.includes(state.products.find((item) => item.id === line.productId)?.categoryId ?? ""))) return { valid: false, message: "This code is reserved for a different kitchen collection.", discount: 0, freeShipping: false };
+    if (coupon.productIds?.length && lines.some((line) => !coupon.productIds?.includes(line.productId))) return { valid: false, message: "This code is reserved for a different kitchen tool.", discount: 0, freeShipping: false };
     const discount = coupon.type === "percent" ? Math.min(subtotal * (coupon.value / 100), coupon.maxDiscount ?? Infinity) : coupon.type === "fixed" ? coupon.value : 0;
     return { valid: true, message: coupon.type === "free_shipping" ? "Delivery is on us." : "Copper saved for this order.", discount: money(discount), freeShipping: coupon.type === "free_shipping" };
   };
@@ -126,32 +127,32 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   const value: StoreContextValue = {
     state, cartCount: state.cart.reduce((sum, line) => sum + line.quantity, 0), cartSubtotal, validateCoupon, campaignResult,
-    addToCart: (productId, color, quantity = 1) => setState((current) => { const existing = current.cart.find((line) => line.productId === productId && line.color === color); return { ...current, cart: existing ? current.cart.map((line) => line === existing ? { ...line, quantity: line.quantity + quantity } : line) : [...current.cart, { productId, color, quantity }] }; }),
-    updateQuantity: (productId, color, quantity) => setState((current) => ({ ...current, cart: quantity <= 0 ? current.cart.filter((line) => line.productId !== productId || line.color !== color) : current.cart.map((line) => line.productId === productId && line.color === color ? { ...line, quantity } : line) })),
-    removeFromCart: (productId, color) => setState((current) => ({ ...current, cart: current.cart.filter((line) => line.productId !== productId || line.color !== color) })),
-    saveForLater: (productId, color) => setState((current) => {
-      const line = current.cart.find((l) => l.productId === productId && l.color === color);
+    addToCart: (productId, color, size = "", quantity = 1) => setState((current) => { const existing = current.cart.find((line) => line.productId === productId && line.color === color && line.size === size); return { ...current, cart: existing ? current.cart.map((line) => line === existing ? { ...line, quantity: line.quantity + quantity } : line) : [...current.cart, { productId, color, size, quantity }] }; }),
+    updateQuantity: (productId, color, size, quantity) => setState((current) => ({ ...current, cart: quantity <= 0 ? current.cart.filter((line) => line.productId !== productId || line.color !== color || line.size !== size) : current.cart.map((line) => line.productId === productId && line.color === color && line.size === size ? { ...line, quantity } : line) })),
+    removeFromCart: (productId, color, size) => setState((current) => ({ ...current, cart: current.cart.filter((line) => line.productId !== productId || line.color !== color || line.size !== size) })),
+    saveForLater: (productId, color, size) => setState((current) => {
+      const line = current.cart.find((l) => l.productId === productId && l.color === color && l.size === size);
       if (!line) return current;
       return {
         ...current,
-        cart: current.cart.filter((l) => !(l.productId === productId && l.color === color)),
-        saveForLater: [...current.saveForLater.filter((l) => !(l.productId === productId && l.color === color)), line]
+        cart: current.cart.filter((l) => !(l.productId === productId && l.color === color && l.size === size)),
+        saveForLater: [...current.saveForLater.filter((l) => !(l.productId === productId && l.color === color && l.size === size)), line]
       };
     }),
-    moveToCart: (productId, color) => setState((current) => {
-      const line = current.saveForLater.find((l) => l.productId === productId && l.color === color);
+    moveToCart: (productId, color, size) => setState((current) => {
+      const line = current.saveForLater.find((l) => l.productId === productId && l.color === color && l.size === size);
       if (!line) return current;
       return {
         ...current,
-        saveForLater: current.saveForLater.filter((l) => !(l.productId === productId && l.color === color)),
-        cart: [...current.cart.filter((l) => !(l.productId === productId && l.color === color)), line]
+        saveForLater: current.saveForLater.filter((l) => !(l.productId === productId && l.color === color && l.size === size)),
+        cart: [...current.cart.filter((l) => !(l.productId === productId && l.color === color && l.size === size)), line]
       };
     }),
-    removeFromSaved: (productId, color) => setState((current) => ({ ...current, saveForLater: current.saveForLater.filter((line) => line.productId !== productId || line.color !== color) })),
+    removeFromSaved: (productId, color, size) => setState((current) => ({ ...current, saveForLater: current.saveForLater.filter((line) => line.productId !== productId || line.color !== color || line.size !== size) })),
     setCouponCode: (couponCode) => setState((current) => ({ ...current, couponCode })),
     placeOrder: async (details) => {
       if (!user || !state.cart.length) return null;
-      const couponResult = validateCoupon(state.couponCode); const activeCampaign = campaignResult(); const discount = (couponResult.valid ? couponResult.discount : 0) + activeCampaign.discount; const shipping = couponResult.freeShipping || activeCampaign.freeShipping || cartSubtotal >= 300 ? 0 : 18; const id = `CK-${String(Date.now()).slice(-6)}`;
+      const couponResult = validateCoupon(state.couponCode); const activeCampaign = campaignResult(); const discount = (couponResult.valid ? couponResult.discount : 0) + activeCampaign.discount; const shipping = details.fulfillment === "pickup" || couponResult.freeShipping || activeCampaign.freeShipping || cartSubtotal >= 300 ? 0 : 18; const id = `CK-${String(Date.now()).slice(-6)}`;
       const order: Order & { campaignId?: string } = { id, createdAt: new Date().toISOString(), status: "placed", lines: state.cart.map((line) => { const product = state.products.find((item) => item.id === line.productId)!; return { ...line, name: product.name, price: product.price, image: product.image }; }), subtotal: cartSubtotal, discount, shipping, total: money(cartSubtotal - discount + shipping), couponCode: couponResult.valid ? state.couponCode ?? undefined : undefined, campaignId: activeCampaign.campaign?.id, ...details };
       const confirmed = await laravelRequest<Order>("/orders", "POST", { order });
       setState((current) => ({ ...current, orders: [confirmed, ...current.orders.filter((existing) => existing.id !== confirmed.id)], cart: [], couponCode: null }));
