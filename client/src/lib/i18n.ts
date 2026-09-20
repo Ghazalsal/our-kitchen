@@ -256,6 +256,8 @@ export const enToAr: Record<string, string> = {
   "On the counter now.": "على المطبخ الآن.",
   "Order desk": "مكتب الطلبات",
   "Customer": "العميل",
+  "Phone": "الهاتف",
+  "Fulfillment": "طريقة الاستلام",
   "Status": "الحالة",
   "Order": "الطلب",
   "Live kitchen signals": "تنبيهات المطبخ المباشرة",

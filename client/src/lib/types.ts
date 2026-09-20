@@ -74,6 +74,7 @@ export interface Order {
   campaignId?: string;
   customerName: string;
   customerEmail: string;
+  customerPhone?: string;
   address: string;
   fulfillment: FulfillmentMethod;
 }
