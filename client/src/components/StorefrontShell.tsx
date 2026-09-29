@@ -7,8 +7,23 @@ import { CartDrawer } from "./CartDrawer";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { formatILS } from "@/lib/money";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
+import type { Product } from "@/lib/types";
 
 const mark = "/images/logo.png";
+
+export const isDeal = (product: Product) => Boolean(product.deal || product.compareAt);
+
+/** Click handler for any link to /deals: stays put with a toast when nothing is on offer. */
+export function useDealsGuard() {
+  const { state } = useStore();
+  const hasDeals = state.products.some(isDeal);
+  return (event: React.MouseEvent) => {
+    if (hasDeals) return;
+    event.preventDefault();
+    toast("No deals yet.");
+  };
+}
 
 export function Wordmark({ dark = false }: { dark?: boolean }) {
   return <Link href="/" className={`group inline-flex items-center gap-2.5 ${dark ? "text-[#FAF6F0]" : "text-[#17130F]"}`}>
@@ -30,6 +45,7 @@ export function StorefrontShell({ children }: { children: React.ReactNode }) {
   const { state, cartCount, markNotificationsRead } = useStore();
   const { user } = useAuth();
   const [, setLocation] = useLocation();
+  const guardDeals = useDealsGuard();
   const unseen = state.notifications.filter((item) => item.audience === "customer" && !item.read).length;
   const results = useMemo(() => search.trim() ? state.products.filter((item) => `${item.name} ${item.brand} ${item.categoryId}`.toLowerCase().includes(search.toLowerCase())).slice(0, 4) : [], [search, state.products]);
 
@@ -45,9 +61,8 @@ export function StorefrontShell({ children }: { children: React.ReactNode }) {
         </div>
         <nav className="hidden items-center gap-7 text-xs font-bold uppercase tracking-[0.13em] lg:flex">
           <Link href="/shop" className="transition hover:text-[#C0632D]">Shop tools</Link>
-          <Link href="/deals" className="transition hover:text-[#C0632D]">Copper deals</Link>
+          <Link href="/deals" onClick={guardDeals} className="transition hover:text-[#C0632D]">Copper deals</Link>
           <Link href="/track" className="transition hover:text-[#C0632D]">Track order</Link>
-          <a href="#journal" className="transition hover:text-[#C0632D]">Journal</a>
         </nav>
         <div className="flex items-center justify-end gap-1 lg:w-[32%]">
           <LanguageToggle />
@@ -72,12 +87,11 @@ export function StorefrontShell({ children }: { children: React.ReactNode }) {
 }
 
 function Footer() {
+  const guardDeals = useDealsGuard();
   return <footer className="border-t border-[#3D3127] bg-[#17130F] text-[#FAF6F0]">
-    <div className="container grid gap-10 py-12 md:grid-cols-[1.5fr_1fr_1fr_1.25fr]">
+    <div className="container grid gap-10 py-12 md:grid-cols-[1.5fr_1fr]">
       <div><Wordmark dark /><p className="mt-5 max-w-xs text-sm leading-6 text-[#CDBFB2]">Considered tools for the well-used kitchen. Chosen for their work, not their noise.</p><Link href="/admin/login" className="mt-5 inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.16em] text-[#D9A441] hover:text-white"><ChefHat size={13} /> Atelier desk</Link></div>
-      <div><p className="eyebrow !text-[#D9A441]">The counter</p><div className="mt-4 grid gap-3 text-sm text-[#E8DCD1]"><Link href="/shop">All appliances</Link><Link href="/deals">Copper deals</Link><Link href="/track">Track your order</Link><Link href="/account">Your account</Link></div></div>
-      <div><p className="eyebrow !text-[#D9A441]">Assistance</p><div className="mt-4 grid gap-3 text-sm text-[#E8DCD1]"><a href="#care">Care & repairs</a><a href="#delivery">Delivery notes</a><a href="#contact">Talk to the kitchen</a></div></div>
-      <div><p className="eyebrow !text-[#D9A441]">A note from the counter</p><p className="mt-4 text-sm leading-6 text-[#E8DCD1]">Quiet product notes, useful recipes and occasional copper savings.</p><div className="mt-4 flex border-b border-[#6A5543] pb-2"><input className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-[#9D8B7C]" placeholder="Your email" /><button className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#D9A441]">Join</button></div></div>
+      <div className="md:justify-self-end"><p className="eyebrow !text-[#D9A441]">The counter</p><div className="mt-4 grid gap-3 text-sm text-[#E8DCD1]"><Link href="/shop">All appliances</Link><Link href="/deals" onClick={guardDeals}>Copper deals</Link><Link href="/track">Track your order</Link><Link href="/account">Your account</Link></div></div>
     </div>
     <div className="border-t border-[#3D3127] py-4 text-center text-[10px] uppercase tracking-[0.13em] text-[#907F72]">© 2026 Our Kitchen · Copper &amp; Co.</div>
   </footer>;
@@ -85,6 +99,7 @@ function Footer() {
 
 function MobileNav() {
   const [location] = useLocation();
+  const guardDeals = useDealsGuard();
   const entries = [{ href: "/", label: "Home" }, { href: "/shop", label: "Shop" }, { href: "/deals", label: "Deals" }, { href: "/track", label: "Orders" }];
-  return <nav className="fixed inset-x-0 bottom-0 z-40 flex justify-around border-t border-[#E6D7C7] bg-[#FFFDF9] py-2 md:hidden">{entries.map((entry) => <Link key={entry.href} href={entry.href} className={`px-3 py-1 text-[9px] font-bold uppercase tracking-[0.15em] ${location === entry.href ? "text-[#C0632D]" : "text-[#73675E]"}`}>{entry.label}</Link>)}</nav>;
+  return <nav className="fixed inset-x-0 bottom-0 z-40 flex justify-around border-t border-[#E6D7C7] bg-[#FFFDF9] py-2 md:hidden">{entries.map((entry) => <Link key={entry.href} href={entry.href} onClick={entry.href === "/deals" ? guardDeals : undefined} className={`px-3 py-1 text-[9px] font-bold uppercase tracking-[0.15em] ${location === entry.href ? "text-[#C0632D]" : "text-[#73675E]"}`}>{entry.label}</Link>)}</nav>;
 }

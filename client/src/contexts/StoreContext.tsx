@@ -7,7 +7,8 @@ import { laravelRequest, useAuth } from "@/contexts/AuthContext";
 
 const STORE_KEY = "our-kitchen-copperline-v1";
 const NOTIFICATION_POLLING_INTERVAL_MS = 30_000;
-const freshState = (): StoreState => ({ products, categories, coupons, campaigns, cart: [], saveForLater: [], couponCode: null, orders, notifications, messages });
+// The catalogue (products, collections, coupons, campaigns) always comes from the API; the seed is only used to populate an empty backend.
+const freshState = (): StoreState => ({ products: [], categories: [], coupons: [], campaigns: [], cart: [], saveForLater: [], couponCode: null, orders, notifications, messages });
 type StoreActivity = Pick<StoreState, "orders" | "notifications" | "messages">;
 
 type StoreContextValue = {
@@ -48,7 +49,7 @@ const api = async <T,>(path: string, method = "GET", body?: unknown): Promise<T 
 };
 export function StoreProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
-  const [state, setState] = useState<StoreState>(() => { try { const saved = localStorage.getItem(STORE_KEY); return saved ? { ...freshState(), ...JSON.parse(saved) } : freshState(); } catch { return freshState(); } });
+  const [state, setState] = useState<StoreState>(() => { try { const saved = localStorage.getItem(STORE_KEY); if (!saved) return freshState(); const { products: _p, categories: _c, coupons: _k, campaigns: _m, ...cached } = JSON.parse(saved); return { ...freshState(), ...cached }; } catch { return freshState(); } });
   const cartId = user ? `cart-${user.id}` : null;
   const [hydrated, setHydrated] = useState(false);
 

@@ -19,12 +19,13 @@ export default function Track() {
   const send = () => { if (!order || !message.trim()) return; sendMessage(order.id, "customer", message.trim()); setMessage(""); };
   return <StorefrontShell><main className="container py-10 md:py-16"><p className="eyebrow">Order tracking</p><h1 className="mt-3 text-5xl tracking-[-0.055em] md:text-6xl">Where the counter is now.</h1><div className="mt-8 flex max-w-xl border-b border-[#BFAE9E] pb-2"><input value={query} onChange={(event) => setQuery(event.target.value)} onKeyDown={(event) => event.key === "Enter" && locate()} placeholder="Order number e.g. CK-18042" className="min-w-0 flex-1 bg-transparent text-lg uppercase outline-none placeholder:text-[#8B7D70]" /><button onClick={locate} className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#8A4A27]">Find order</button></div>{!order ? <div className="paper-panel mt-8 max-w-xl p-8"><h2 className="text-3xl">We can’t find that order yet.</h2><p className="mt-2 text-sm text-[#73675E]">Try the number from your confirmation. For this demo, use {state.orders[0]?.id}.</p></div> : <div className="mt-10 grid gap-8 lg:grid-cols-[1fr_0.72fr]"><section><div className="paper-panel p-6 md:p-8"><div className="flex flex-wrap items-start justify-between gap-4"><div><p className="eyebrow">{order.id}</p><h2 className="mt-2 text-4xl">In the kitchen.</h2></div><span className="stamp border-[#687C5D] text-[#526349]">{order.status}</span></div><p className="mt-4 text-sm leading-6 text-[#5B4E44]">Placed {new Date(order.createdAt).toLocaleDateString("en-US", { month: "long", day: "numeric" })} for {formatILS(order.total)}.</p><div className="mt-12">
                   <div className="relative">
-                    <div className="absolute left-0 top-1/2 h-0.5 w-full -translate-y-1/2 bg-[#E6D7C7]" />
-                    <div 
-                      className="absolute left-0 top-1/2 h-0.5 bg-[#C0632D] transition-all duration-1000" 
-                      style={{ width: `${(stages.indexOf(order.status) / (stages.length - 1)) * 100}%` }} 
+                    {/* Equal columns put every circle at the center of its slot, so the track runs center-to-center at circle height (h-10 → 20px). */}
+                    <div className="absolute top-5 h-0.5 -translate-y-1/2 bg-[#E6D7C7]" style={{ insetInlineStart: `${50 / stages.length}%`, insetInlineEnd: `${50 / stages.length}%` }} />
+                    <div
+                      className="absolute top-5 h-0.5 -translate-y-1/2 bg-[#C0632D] transition-all duration-1000"
+                      style={{ insetInlineStart: `${50 / stages.length}%`, width: `${(Math.max(0, stages.indexOf(order.status)) / (stages.length - 1)) * (100 - 100 / stages.length)}%` }}
                     />
-                    <div className="relative flex justify-between">
+                    <div className="relative grid" style={{ gridTemplateColumns: `repeat(${stages.length}, minmax(0, 1fr))` }}>
                       {stages.map((stage, index) => {
                         const currentIdx = stages.indexOf(order.status);
                         const isDone = index <= currentIdx;
@@ -41,7 +42,7 @@ export default function Track() {
                                 <span className="absolute inset-0 animate-ping rounded-full bg-[#C0632D]/20" />
                               )}
                             </div>
-                            <span className={`mt-4 text-[10px] font-bold uppercase tracking-[0.15em] transition-colors ${isDone ? "text-[#17130F]" : "text-[#8B7D70]"}`}>
+                            <span className={`mt-4 text-center text-[9px] font-bold uppercase tracking-[0.1em] transition-colors sm:text-[10px] sm:tracking-[0.15em] ${isDone ? "text-[#17130F]" : "text-[#8B7D70]"}`}>
                               {stage}
                             </span>
                           </div>
