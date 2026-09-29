@@ -125,6 +125,7 @@
   .copper-button { @apply inline-flex items-center justify-center gap-2 bg-[#C0632D] px-5 py-3 text-xs font-bold uppercase tracking-[0.14em] text-[#FAF6F0] transition duration-200 hover:bg-[#9D4D23] active:scale-[0.97]; }
   .paper-panel { @apply border border-[#E6D7C7] bg-[#FFFDF9] shadow-[0_14px_50px_rgba(23,19,15,0.06)]; }
   .stamp { @apply inline-flex items-center gap-2 rounded-full border border-current px-3 py-1 text-[10px] font-bold uppercase tracking-[0.13em]; }
+  .stamp-glow { box-shadow: 0 0 0 1px currentColor inset, 0 0 12px 1px currentColor; }
   .image-wash { @apply absolute inset-0 bg-gradient-to-t from-[#17130F]/75 via-[#17130F]/10 to-transparent; }
   @media (min-width: 640px) { .container { padding-left: 1.5rem; padding-right: 1.5rem; } }
   @media (min-width: 1024px) { .container { padding-left: 2rem; padding-right: 2rem; max-width: 1280px; } }

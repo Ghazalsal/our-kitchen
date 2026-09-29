@@ -25,6 +25,7 @@ export interface Product {
   stock: number;
   colors: string[];
   sizes: string[];
+  variantImages?: VariantImage[];
   featured?: boolean;
   deal?: boolean;
   published?: boolean;
@@ -35,6 +36,24 @@ export interface CartLine {
   quantity: number;
   color: string;
   size: string;
+}
+
+/** An image tied to a specific color, a specific size, or a specific color+size pair. Leave color/size unset to match any value for that axis. */
+export interface VariantImage {
+  id: string;
+  color?: string;
+  size?: string;
+  image: string;
+}
+
+/** Picks the most specific variant image for a color/size pick: exact color+size, then color-only, then size-only. */
+export function resolveVariantImage(variantImages: VariantImage[] | undefined, color: string, size: string): VariantImage | undefined {
+  if (!variantImages?.length) return undefined;
+  const exact = variantImages.find((entry) => entry.color && entry.size && entry.color === color && entry.size === size);
+  if (exact) return exact;
+  const colorOnly = variantImages.find((entry) => entry.color && !entry.size && entry.color === color);
+  if (colorOnly) return colorOnly;
+  return variantImages.find((entry) => entry.size && !entry.color && entry.size === size);
 }
 
 export interface Coupon {
@@ -74,6 +93,7 @@ export interface Order {
   campaignId?: string;
   customerName: string;
   customerEmail: string;
+  customerPhone?: string;
   address: string;
   fulfillment: FulfillmentMethod;
 }
