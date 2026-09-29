@@ -31,8 +31,8 @@ class PhoneRegistrationControllerBehaviorTest extends TestCase
                 'name' => 'Phone Customer',
                 'email' => $emails[0],
                 'phone' => '059 123 4567',
-                'password' => 'PhoneCustomerPass123',
-                'password_confirmation' => 'PhoneCustomerPass123',
+                'password' => 'PhoneCustomer#123',
+                'password_confirmation' => 'PhoneCustomer#123',
             ]))->getData(true)['user'];
 
             $this->assertSame('+970591234567', $registered['phone']);
@@ -43,7 +43,7 @@ class PhoneRegistrationControllerBehaviorTest extends TestCase
             Auth::logout();
             $signedIn = $controller->login($requestFor('POST', [
                 'identifier' => '+970 59 123 4567',
-                'password' => 'PhoneCustomerPass123',
+                'password' => 'PhoneCustomer#123',
             ]))->getData(true)['user'];
             $this->assertSame($registered['id'], $signedIn['id']);
             $this->assertSame('+970591234567', $signedIn['phone']);
@@ -53,8 +53,8 @@ class PhoneRegistrationControllerBehaviorTest extends TestCase
                     'name' => 'Duplicate Phone',
                     'email' => 'phone-registration-duplicate@example.com',
                     'phone' => '0591234567',
-                    'password' => 'DuplicatePhonePass123',
-                    'password_confirmation' => 'DuplicatePhonePass123',
+                    'password' => 'DuplicatePhone#123',
+                    'password_confirmation' => 'DuplicatePhone#123',
                 ]));
                 $this->fail('Duplicate normalized phone registration should be rejected.');
             } catch (ValidationException $exception) {
