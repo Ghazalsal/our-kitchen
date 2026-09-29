@@ -184,7 +184,7 @@ class StoreApiController extends Controller
             DB::table('kitchen_order_lines')->where('orderId', $order['id'])->delete();
             foreach ($order['lines'] as $line) DB::table('kitchen_order_lines')->insert(['orderId' => $order['id'], 'productId' => $line['productId'], 'color' => $line['color'], 'size' => $line['size'], 'quantity' => $line['quantity'], 'name' => $line['name'], 'price' => $line['price'], 'image' => $line['image'], 'created_at' => now(), 'updated_at' => now()]);
             if (!empty($order['couponCode'])) DB::table('kitchen_coupons')->whereRaw('LOWER(code) = ?', [strtolower($order['couponCode'])])->increment('uses');
-            $this->notify('admin', 'A fresh order is on the counter', "{$order['id']} has been placed for ₪" . number_format((float) $order['total'], 2) . '.', $order['id']);
+            $this->notify('admin', 'A fresh order is on the counter', "New order {$order['id']} placed by {$order['customerName']} for ₪" . number_format((float) $order['total'], 2) . '.', $order['id']);
         });
         return response()->json($this->orderById($order['id']), 201);
     }

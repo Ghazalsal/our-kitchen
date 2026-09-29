@@ -549,11 +549,26 @@ export const enToAr: Record<string, string> = {
 
 export const arToEn: Record<string, string> = Object.fromEntries(Object.entries(enToAr).map(([english, arabic]) => [arabic, english]));
 
+// Sentences with several interpolated values (order ids, names, amounts) that
+// the prefix/suffix fragment matching below cannot reach.
+const patterns: Record<"en" | "ar", [RegExp, string][]> = {
+  ar: [
+    [/^New order (\S+) placed by (.+) for ₪([\d.,]+)\.$/, "طلب جديد $1 من $2 بقيمة ₪$3."],
+    [/^(\S+) has been placed for ₪([\d.,]+)\.$/, "تم تقديم الطلب $1 بقيمة ₪$2."],
+  ],
+  en: [
+    [/^طلب جديد (\S+) من (.+) بقيمة ₪([\d.,]+)\.$/, "New order $1 placed by $2 for ₪$3."],
+    [/^تم تقديم الطلب (\S+) بقيمة ₪([\d.,]+)\.$/, "$1 has been placed for ₪$2."],
+  ],
+};
+
 export function translateText(value: string, language: "en" | "ar") {
   const source = language === "ar" ? enToAr : arToEn;
   const trimmed = value.trim();
   const exact = source[trimmed];
   if (exact) return value.replace(trimmed, exact);
+  const pattern = patterns[language].find(([regex]) => regex.test(trimmed));
+  if (pattern) return value.replace(trimmed, trimmed.replace(pattern[0], pattern[1]));
 
   // Fall back to matching known fragments at the start and/or end of the text,
   // so strings with an interpolated value in the middle (e.g. "Only ${n} left…")
