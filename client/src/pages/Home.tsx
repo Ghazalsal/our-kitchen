@@ -1,8 +1,8 @@
 /** Copperline Atelier home: an editorial procession from campaign hero to tactile product discovery. */
-import { ArrowUpRight, Mail, ShieldCheck, Sparkles, Truck } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "wouter";
-import { StorefrontShell } from "@/components/StorefrontShell";
+import { StorefrontShell, useDealsGuard } from "@/components/StorefrontShell";
 import { ProductCard } from "@/components/ProductCard";
 import { useStore } from "@/contexts/StoreContext";
 import { formatILS } from "@/lib/money";
@@ -11,6 +11,7 @@ const hero = "/catalog/hero.webp";
 
 export default function Home() {
   const { state } = useStore();
+  const guardDeals = useDealsGuard();
   const dorshaEdit = state.products.filter((product) => product.brand === "Dorsha").slice(0, 4);
   const everydayEdit = state.products.filter((product) => !product.featured && product.brand !== "Dorsha").slice(0, 4);
   return <StorefrontShell>
@@ -19,7 +20,7 @@ export default function Home() {
         <img src={hero} alt="Copper stand mixer on a kitchen worktop" className="absolute inset-0 h-full w-full object-cover object-[66%_center] opacity-90" />
         <div className="absolute inset-0 bg-gradient-to-r from-[#17130F] via-[#17130F]/82 to-[#17130F]/10" />
         <div className="container relative flex min-h-[650px] items-end pb-14 pt-24 md:min-h-[720px] md:pb-20">
-          <div className="max-w-2xl reveal"><div className="flex items-center gap-3"><span className="h-px w-12 bg-[#D9A441]" /><span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#D9A441]">Where every good kitchen begins</span></div><h1 className="mt-6 max-w-xl text-5xl leading-[0.92] tracking-[-0.055em] md:text-7xl">Keep only the tools that <i className="font-normal text-[#E0A67B]">earn</i> their place.</h1><p className="mt-6 max-w-lg text-base leading-7 text-[#E8DCD1] md:text-lg">The appliances you reach for when a weekday meal becomes the best part of your day.</p><div className="mt-9 flex flex-wrap gap-3"><Link href="/shop" className="copper-button">Set your kitchen in motion <ArrowUpRight size={16} /></Link><Link href="/deals" className="inline-flex items-center gap-2 border border-[#FAF6F0]/40 px-5 py-3 text-xs font-bold uppercase tracking-[0.14em] transition hover:border-[#D9A441] hover:text-[#D9A441]">Browse copper deals</Link></div></div>
+          <div className="max-w-2xl reveal"><div className="flex items-center gap-3"><span className="h-px w-12 bg-[#D9A441]" /><span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#D9A441]">Where every good kitchen begins</span></div><h1 className="mt-6 max-w-xl text-5xl leading-[0.92] tracking-[-0.055em] md:text-7xl">Keep only the tools that <i className="font-normal text-[#E0A67B]">earn</i> their place.</h1><p className="mt-6 max-w-lg text-base leading-7 text-[#E8DCD1] md:text-lg">The appliances you reach for when a weekday meal becomes the best part of your day.</p><div className="mt-9 flex flex-wrap gap-3"><Link href="/shop" className="copper-button">Set your kitchen in motion <ArrowUpRight size={16} /></Link><Link href="/deals" onClick={guardDeals} className="inline-flex items-center gap-2 border border-[#FAF6F0]/40 px-5 py-3 text-xs font-bold uppercase tracking-[0.14em] transition hover:border-[#D9A441] hover:text-[#D9A441]">Browse copper deals</Link></div></div>
           <div className="absolute bottom-7 right-5 hidden w-40 border-l border-[#D9A441] pl-4 text-xs leading-5 text-[#E8DCD1] md:block"><b className="block text-[10px] uppercase tracking-[0.16em] text-[#D9A441]">01 / The workhorse</b><span className="mt-1 block">Tools chosen for a life in use.</span></div>
         </div>
       </section>
@@ -32,19 +33,24 @@ export default function Home() {
           <Link href="/shop" className="text-xs font-bold uppercase tracking-[0.14em] text-[#8A4A27] hover:text-[#C0632D]">Browse all <ArrowUpRight size={15} className="inline" /></Link>
         </div>
         <div className="no-scrollbar flex gap-5 overflow-x-auto px-5 pb-4 md:px-[max(1.25rem,calc((100vw-1280px)/2))]">
-          {state.categories.map((category, index) => (
-            <Link key={category.id} href={`/shop?category=${category.id}`} className="group relative min-w-[280px] flex-shrink-0 overflow-hidden md:min-w-[340px]">
-              <div className="aspect-[4/5] overflow-hidden bg-[#E9DCCD]">
-                <img src={category.image} alt="" className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.06]" />
-                <div className="image-wash opacity-40 group-hover:opacity-60" />
+          {state.categories.map((category, index) => {
+            const count = state.products.filter((product) => product.categoryId === category.id).length;
+            return <Link key={category.id} href={`/shop?category=${category.id}`} className="group reveal flex w-[280px] flex-shrink-0 flex-col md:w-[320px]" style={{ animationDelay: `${index * 45}ms` }}>
+              <div className="relative aspect-[4/4.5] shrink-0 overflow-hidden bg-[#E9DCCD]">
+                <img src={category.image} alt={category.name} className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.045]" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#17130F]/70 via-[#17130F]/10 to-transparent transition duration-300 group-hover:from-[#17130F]/80" />
+                <span className="absolute left-3 top-3 bg-[#FFFDF9] px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.14em] text-[#8A4A27]">{String(index + 1).padStart(2, "0")}</span>
+                <p className="absolute inset-x-4 bottom-4 line-clamp-2 translate-y-2 text-xs leading-relaxed text-[#F5EEE5] opacity-0 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100">{category.description}</p>
               </div>
-              <div className="absolute inset-0 flex flex-col justify-end p-6 text-white">
-                <span className="stamp w-fit border-white/40 bg-black/10">0{index + 1}</span>
-                <h3 className="mt-3 text-3xl font-['Fraunces'] leading-none">{category.name}</h3>
-                <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-[#F5EEE5] opacity-0 transition duration-300 group-hover:opacity-100">{category.description}</p>
+              <div className="flex flex-1 items-center justify-between gap-3 border-x border-b border-[#E6D7C7] bg-[#FFFDF9] p-4">
+                <div>
+                  <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-[#8A4A27]">{count} {count === 1 ? "piece" : "pieces"}</p>
+                  <h3 className="mt-1 text-xl leading-5 transition group-hover:text-[#C0632D]">{category.name}</h3>
+                </div>
+                <span className="grid h-8 w-8 flex-shrink-0 place-items-center border border-[#17130F] transition group-hover:border-[#C0632D] group-hover:bg-[#C0632D] group-hover:text-white"><ArrowUpRight size={15} /></span>
               </div>
-            </Link>
-          ))}
+            </Link>;
+          })}
         </div>
       </section>
 
@@ -73,37 +79,8 @@ export default function Home() {
           ))}
         </div>
       </section>}
-
-      <section className="border-y border-[#E6D7C7] bg-[#FFFDF9]">
-        <div className="container grid divide-y divide-[#E6D7C7] md:grid-cols-3 md:divide-x md:divide-y-0">
-          <Trust icon={<Truck />} title="Counter-to-door delivery" body={`Complimentary delivery when the order settles over ${formatILS(300)}.`} />
-          <Trust icon={<ShieldCheck />} title="Two years of care" body="Thoughtful support after the box leaves our kitchen." />
-          <Trust icon={<Sparkles />} title="Chosen, not crowded" body="A considered collection that knows its place on the counter." />
-        </div>
-      </section>
-
-      <section id="journal" className="bg-[#17130F] py-16 text-[#FAF6F0] md:py-24">
-        <div className="container grid items-center gap-10 md:grid-cols-[1.1fr_0.9fr]">
-          <div>
-            <p className="eyebrow !text-[#D9A441]">From the kitchen book</p>
-            <h2 className="mt-3 max-w-lg text-4xl leading-[0.96] tracking-[-0.045em] md:text-5xl">Useful notes for the counter you actually use.</h2>
-          </div>
-          <div className="border-l border-[#D9A441] pl-6">
-            <p className="text-base leading-7 text-[#E8DCD1]">Monthly recipes, care notes and the occasional small saving—written with the expectation that you already know your way around a good pan.</p>
-            <div className="mt-6 flex max-w-md border-b border-[#786858] pb-2">
-              <Mail size={16} className="mr-3 text-[#D9A441]" />
-              <input className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-[#BBAA9C]" placeholder="Email for the kitchen book" />
-              <button className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#D9A441]">Subscribe</button>
-            </div>
-          </div>
-        </div>
-      </section>
     </main>
   </StorefrontShell>;
-}
-
-function Trust({ icon, title, body }: { icon: React.ReactNode; title: string; body: string }) {
-  return <div className="flex gap-4 px-0 py-6 md:px-7 md:py-8"><span className="mt-0.5 text-[#C0632D]">{icon}</span><div><h3 className="font-['Fraunces'] text-xl">{title}</h3><p className="mt-1 text-sm leading-5 text-[#73675E]">{body}</p></div></div>;
 }
 
 function CampaignCountdown({ campaigns }: { campaigns: import("@/lib/types").Campaign[] }) {
