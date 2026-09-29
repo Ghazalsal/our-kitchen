@@ -1,6 +1,6 @@
 /** Copperline Atelier product detail: focused object storytelling, variants, specifications, and a clear purchase moment. */
 import { ArrowLeft, Check, Minus, Plus, ShieldCheck, ShoppingBag, Truck } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useRoute } from "wouter";
 import { toast } from "sonner";
 import { ProductCard } from "@/components/ProductCard";
@@ -11,8 +11,16 @@ import { resolveVariantImage } from "@/lib/types";
 
 export default function ProductDetail() {
   const [, params] = useRoute("/product/:id");
+  const id = params?.id;
+  // Scroll to the top whenever a different product opens (e.g. from the related list).
+  useEffect(() => { window.scrollTo({ top: 0, behavior: "smooth" }); }, [id]);
+  // Keying by id resets color/size/photo/quantity so they don't carry over from the previous product.
+  return <ProductDetailView key={id} id={id} />;
+}
+
+function ProductDetailView({ id }: { id?: string }) {
   const { state, addToCart } = useStore();
-  const product = state.products.find((item) => item.id === params?.id);
+  const product = state.products.find((item) => item.id === id);
   const [photo, setPhoto] = useState(0);
   const [customPhoto, setCustomPhoto] = useState(false);
   const [color, setColor] = useState(product?.colors[0] ?? "");
