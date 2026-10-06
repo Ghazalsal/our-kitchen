@@ -2,7 +2,7 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { campaigns, coupons, categories, messages, notifications, orders, products } from "@/lib/seed";
 import type { Campaign, CampaignResult, CartLine, Category, Coupon, CouponResult, Order, OrderStatus, Product, StoreNotification, StoreState, ThreadMessage } from "@/lib/types";
-import { formatILS } from "@/lib/money";
+import { FREE_DELIVERY_THRESHOLD, formatILS } from "@/lib/money";
 import { laravelRequest, useAuth } from "@/contexts/AuthContext";
 
 const STORE_KEY = "our-kitchen-copperline-v1";
@@ -153,7 +153,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setCouponCode: (couponCode) => setState((current) => ({ ...current, couponCode })),
     placeOrder: async (details) => {
       if (!user || !state.cart.length) return null;
-      const couponResult = validateCoupon(state.couponCode); const activeCampaign = campaignResult(); const discount = (couponResult.valid ? couponResult.discount : 0) + activeCampaign.discount; const shipping = details.fulfillment === "pickup" || couponResult.freeShipping || activeCampaign.freeShipping || cartSubtotal >= 300 ? 0 : 18; const id = `CK-${String(Date.now()).slice(-6)}`;
+      const couponResult = validateCoupon(state.couponCode); const activeCampaign = campaignResult(); const discount = (couponResult.valid ? couponResult.discount : 0) + activeCampaign.discount; const shipping = details.fulfillment === "pickup" || couponResult.freeShipping || activeCampaign.freeShipping || cartSubtotal >= FREE_DELIVERY_THRESHOLD ? 0 : 18; const id = `CK-${String(Date.now()).slice(-6)}`;
       const order: Order & { campaignId?: string } = { id, createdAt: new Date().toISOString(), status: "placed", lines: state.cart.map((line) => { const product = state.products.find((item) => item.id === line.productId)!; return { ...line, name: product.name, price: product.price, image: product.image }; }), subtotal: cartSubtotal, discount, shipping, total: money(cartSubtotal - discount + shipping), couponCode: couponResult.valid ? state.couponCode ?? undefined : undefined, campaignId: activeCampaign.campaign?.id, ...details };
       const confirmed = await laravelRequest<Order>("/orders", "POST", { order });
       setState((current) => ({ ...current, orders: [confirmed, ...current.orders.filter((existing) => existing.id !== confirmed.id)], cart: [], couponCode: null }));

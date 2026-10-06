@@ -5,7 +5,7 @@ import { Link, useLocation } from "wouter";
 import { useStore } from "@/contexts/StoreContext";
 import { CartDrawer } from "./CartDrawer";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { formatILS } from "@/lib/money";
+import { FREE_DELIVERY_THRESHOLD, formatILS } from "@/lib/money";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import type { Product } from "@/lib/types";
@@ -51,7 +51,7 @@ export function StorefrontShell({ children }: { children: React.ReactNode }) {
 
   return <div className="min-h-screen overflow-x-hidden bg-[#FAF6F0] pb-16 text-[#17130F] md:pb-0">
     <div className="relative z-40 overflow-hidden bg-[#17130F] py-2 text-center text-[10px] font-bold uppercase tracking-[0.17em] text-[#FAF6F0]">
-      <div className="animate-[pulse_4s_ease-in-out_infinite]">Copper hours: complimentary delivery over {formatILS(300)} <span className="mx-3 text-[#D9A441]">✦</span> The counter is open</div>
+      <div className="animate-[pulse_4s_ease-in-out_infinite]">Copper hours: complimentary delivery over {formatILS(FREE_DELIVERY_THRESHOLD)} <span className="mx-3 text-[#D9A441]">✦</span> The counter is open</div>
     </div>
     <header className="sticky top-0 z-40 border-b border-[#E6D7C7] bg-[#FAF6F0]/95 backdrop-blur-xl">
       <div className="container flex h-[76px] items-center justify-between gap-4">

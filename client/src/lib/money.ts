@@ -6,3 +6,6 @@ export function formatILS(value: number): string {
     maximumFractionDigits: 2,
   }).format(value);
 }
+
+/** Orders at or above this subtotal ship free. Keep in sync with StoreApiController::createOrder. */
+export const FREE_DELIVERY_THRESHOLD = 500;
