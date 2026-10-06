@@ -107,7 +107,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     if (coupon.categoryIds?.length && lines.some((line) => !coupon.categoryIds?.includes(state.products.find((item) => item.id === line.productId)?.categoryId ?? ""))) return { valid: false, message: "This code is reserved for a different kitchen collection.", discount: 0, freeShipping: false };
     if (coupon.productIds?.length && lines.some((line) => !coupon.productIds?.includes(line.productId))) return { valid: false, message: "This code is reserved for a different kitchen tool.", discount: 0, freeShipping: false };
     const discount = coupon.type === "percent" ? Math.min(subtotal * (coupon.value / 100), coupon.maxDiscount ?? Infinity) : coupon.type === "fixed" ? coupon.value : 0;
-    return { valid: true, message: coupon.type === "free_shipping" ? "Delivery is on us." : "Copper saved for this order.", discount: money(discount), freeShipping: coupon.type === "free_shipping" };
+    return { valid: true, message: coupon.type === "free_shipping" ? "Delivery is on us." : "Discount applied to this order.", discount: money(discount), freeShipping: coupon.type === "free_shipping" };
   };
   const campaignResult = (lines = state.cart): CampaignResult => {
     const now = Date.now();

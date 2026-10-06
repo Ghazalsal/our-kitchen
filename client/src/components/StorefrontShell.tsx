@@ -51,7 +51,7 @@ export function StorefrontShell({ children }: { children: React.ReactNode }) {
 
   return <div className="min-h-screen overflow-x-hidden bg-[#FAF6F0] pb-16 text-[#17130F] md:pb-0">
     <div className="relative z-40 overflow-hidden bg-[#17130F] py-2 text-center text-[10px] font-bold uppercase tracking-[0.17em] text-[#FAF6F0]">
-      <div className="animate-[pulse_4s_ease-in-out_infinite]">Copper hours: complimentary delivery over {formatILS(FREE_DELIVERY_THRESHOLD)} <span className="mx-3 text-[#D9A441]">✦</span> The counter is open</div>
+      <div className="animate-[pulse_4s_ease-in-out_infinite]">Complimentary delivery over {formatILS(FREE_DELIVERY_THRESHOLD)} <span className="mx-3 text-[#D9A441]">✦</span> The counter is open</div>
     </div>
     <header className="sticky top-0 z-40 border-b border-[#E6D7C7] bg-[#FAF6F0]/95 backdrop-blur-xl">
       <div className="container flex h-[76px] items-center justify-between gap-4">
@@ -61,7 +61,7 @@ export function StorefrontShell({ children }: { children: React.ReactNode }) {
         </div>
         <nav className="hidden items-center gap-7 text-xs font-bold uppercase tracking-[0.13em] lg:flex">
           <Link href="/shop" className="transition hover:text-[#C0632D]">Shop tools</Link>
-          <Link href="/deals" onClick={guardDeals} className="transition hover:text-[#C0632D]">Copper deals</Link>
+          <Link href="/deals" onClick={guardDeals} className="transition hover:text-[#C0632D]">Deals</Link>
           <Link href="/track" className="transition hover:text-[#C0632D]">Track order</Link>
         </nav>
         <div className="flex items-center justify-end gap-1 lg:w-[32%]">
@@ -91,7 +91,7 @@ function Footer() {
   return <footer className="border-t border-[#3D3127] bg-[#17130F] text-[#FAF6F0]">
     <div className="container grid gap-10 py-12 md:grid-cols-[1.5fr_1fr]">
       <div><Wordmark dark /><p className="mt-5 max-w-xs text-sm leading-6 text-[#CDBFB2]">Considered tools for the well-used kitchen. Chosen for their work, not their noise.</p><Link href="/admin/login" className="mt-5 inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.16em] text-[#D9A441] hover:text-white"><ChefHat size={13} /> Atelier desk</Link></div>
-      <div className="md:justify-self-end"><p className="eyebrow !text-[#D9A441]">The counter</p><div className="mt-4 grid gap-3 text-sm text-[#E8DCD1]"><Link href="/shop">All appliances</Link><Link href="/deals" onClick={guardDeals}>Copper deals</Link><Link href="/track">Track your order</Link><Link href="/account">Your account</Link></div></div>
+      <div className="md:justify-self-end"><p className="eyebrow !text-[#D9A441]">The counter</p><div className="mt-4 grid gap-3 text-sm text-[#E8DCD1]"><Link href="/shop">All appliances</Link><Link href="/deals" onClick={guardDeals}>Deals</Link><Link href="/track">Track your order</Link><Link href="/account">Your account</Link></div></div>
     </div>
     <div className="border-t border-[#3D3127] py-4 text-center text-[10px] uppercase tracking-[0.13em] text-[#907F72]">© 2026 Our Kitchen · Copper &amp; Co.</div>
   </footer>;
