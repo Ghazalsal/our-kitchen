@@ -175,7 +175,7 @@ class StoreApiController extends Controller
         $coupon = $this->couponDiscount((string) ($order['couponCode'] ?? ''), $lines, $subtotal);
         $campaign = $this->campaignDiscount($lines, $subtotal);
         $discount = min($subtotal, round($coupon['discount'] + $campaign['discount'], 2));
-        $shipping = $order['fulfillment'] === 'pickup' || $coupon['freeShipping'] || $campaign['freeShipping'] || $subtotal >= 300 ? 0 : 18;
+        $shipping = $order['fulfillment'] === 'pickup' || $coupon['freeShipping'] || $campaign['freeShipping'] || $subtotal >= 500 ? 0 : 18;
         $order = array_merge($order, ['lines' => $lines, 'subtotal' => $subtotal, 'discount' => $discount, 'shipping' => $shipping, 'total' => max(0, round($subtotal - $discount + $shipping, 2)), 'couponCode' => $coupon['coupon']?->code, 'campaignId' => $campaign['campaign']?->id]);
         DB::transaction(function () use ($order, $user) {
             DB::table('kitchen_orders')->updateOrInsert(['id' => $order['id']], [

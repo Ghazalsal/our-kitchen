@@ -1,6 +1,6 @@
 /** Copperline Atelier localization: Arabic editorial phrasing for customer and atelier-desk interfaces. */
 export const enToAr: Record<string, string> = {
-  "Copper hours: complimentary delivery over $300": "ساعات النحاس: توصيل مجاني للطلبات فوق 300 دولار",
+  "Copper hours: complimentary delivery over": "ساعات النحاس: توصيل مجاني للطلبات فوق",
   "The counter is open": "المطبخ مفتوح",
   "Shop tools": "تسوّق الأدوات",
   "Copper deals": "عروض النحاس",

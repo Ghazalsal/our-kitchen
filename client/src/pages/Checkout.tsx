@@ -5,7 +5,7 @@ import { Link, useLocation } from "wouter";
 import { toast } from "sonner";
 import { StorefrontShell } from "@/components/StorefrontShell";
 import { useStore } from "@/contexts/StoreContext";
-import { formatILS } from "@/lib/money";
+import { FREE_DELIVERY_THRESHOLD, formatILS } from "@/lib/money";
 import { useAuth } from "@/contexts/AuthContext";
 import type { FulfillmentMethod } from "@/lib/types";
 
@@ -18,7 +18,7 @@ export default function Checkout() {
   const [placedId, setPlacedId] = useState<string | null>(null);
   const coupon = validateCoupon(state.couponCode);
   const campaign = campaignResult();
-  const shipping = details.fulfillment === "pickup" || coupon.freeShipping || campaign.freeShipping || cartSubtotal >= 300 ? 0 : 18;
+  const shipping = details.fulfillment === "pickup" || coupon.freeShipping || campaign.freeShipping || cartSubtotal >= FREE_DELIVERY_THRESHOLD ? 0 : 18;
   const lines = state.cart.map((line) => ({ ...line, product: state.products.find((item) => item.id === line.productId)! })).filter((line) => line.product);
   const apply = () => { const result = validateCoupon(code); if (result.valid) { setCouponCode(code || null); toast.success(result.message); } else toast.error(result.message); };
   const submit = async () => { if (!user) return toast.error("Please sign in before placing an order."); if (details.fulfillment === "delivery" && !details.address) return toast.error("Add your delivery address first."); try { const order = await placeOrder({ ...details, customerName: user.name, customerEmail: user.email }); if (!order) return toast.error("Your bag is empty. Your cart has been kept intact."); setPlacedId(order.id); toast.success("Your order is on the counter."); } catch (error) { toast.error(error instanceof Error ? error.message : "We could not place your order. Your cart has been kept intact."); } };
