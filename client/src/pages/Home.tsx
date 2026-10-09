@@ -17,7 +17,7 @@ export default function Home() {
   return <StorefrontShell>
     <main>
       <section className="relative min-h-[650px] overflow-hidden bg-[#17130F] text-[#FAF6F0] md:min-h-[720px]">
-        <img src={hero} alt="Copper stand mixer on a kitchen worktop" className="absolute inset-0 h-full w-full object-cover object-[66%_center] opacity-90" />
+        <img src={hero} alt="Copper stand mixer on a kitchen worktop" className="absolute inset-0 h-full w-full object-cover object-[66%_top] opacity-90" />
         <div className="absolute inset-0 bg-gradient-to-r from-[#17130F] via-[#17130F]/82 to-[#17130F]/10" />
         <div className="container relative flex min-h-[650px] items-end pb-14 pt-24 md:min-h-[720px] md:pb-20">
           <div className="max-w-2xl reveal"><div className="flex items-center gap-3"><span className="h-px w-12 bg-[#D9A441]" /><span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#D9A441]">Where every good kitchen begins</span></div><h1 className="mt-6 max-w-xl text-5xl leading-[0.92] tracking-[-0.055em] md:text-7xl">Keep only the tools that <i className="font-normal text-[#E0A67B]">earn</i> their place.</h1><p className="mt-6 max-w-lg text-base leading-7 text-[#E8DCD1] md:text-lg">The appliances you reach for when a weekday meal becomes the best part of your day.</p><div className="mt-9 flex flex-wrap gap-3"><Link href="/shop" className="copper-button">Set your kitchen in motion <ArrowUpRight size={16} /></Link><Link href="/deals" onClick={guardDeals} className="inline-flex items-center gap-2 border border-[#FAF6F0]/40 px-5 py-3 text-xs font-bold uppercase tracking-[0.14em] transition hover:border-[#D9A441] hover:text-[#D9A441]">Browse deals</Link></div></div>
