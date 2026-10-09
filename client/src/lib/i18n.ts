@@ -21,8 +21,6 @@ export const enToAr: Record<string, string> = {
   "The tools you reach for when a weekday meal becomes the best part of your day.": "الأدوات التي تصل إليها حين تتحوّل وجبة يوم عادي إلى أجمل لحظات يومك.",
   "Set your kitchen in motion": "حرّك مطبخك",
   "Browse deals": "تصفّح العروض",
-  "01 / The workhorse": "01 / الأداة الأساسية",
-  "Tools chosen for a life in use.": "أدوات اختيرت لحياة مليئة بالاستخدام.",
   "Counter-to-door delivery": "توصيل من المطبخ إلى الباب",
   "Complimentary delivery when the order settles over": "توصيل مجاني عندما تتجاوز قيمة الطلب",
   "Two years of care": "عامان من العناية",
