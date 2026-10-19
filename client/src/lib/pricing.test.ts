@@ -4,8 +4,8 @@ import type { Campaign, CartLine, Coupon, Product } from "./types";
 
 const NOW = new Date("2026-10-19T12:00:00").getTime();
 const product = (id: string, price: number, extra: Partial<Product> = {}): Product => ({ id, name: id, brand: "Villa", price, categoryId: "bedding", image: "", gallery: [], description: "", features: [], stock: 10, colors: ["Oat"], sizes: [], ...extra });
-const campaign = (extra: Partial<Campaign>): Campaign => ({ id: "c1", name: "Sale", type: "percent", value: 10, minSpend: 0, targetType: "all", targetValues: [], startsAt: "2026-10-01T00:00", endsAt: "2026-11-01T00:00", enabled: true, priority: 0, ...extra });
-const coupon = (extra: Partial<Coupon>): Coupon => ({ id: "k1", code: "SAVE", type: "percent", value: 10, minSpend: 0, usageLimit: null, uses: 0, expiresAt: "2026-12-31", active: true, ...extra });
+const campaign = (extra: Partial<Campaign>): Campaign => ({ id: "c1", name: "Sale", type: "percent", value: 10, targetType: "all", targetValues: [], startsAt: "2026-10-01T00:00", endsAt: "2026-11-01T00:00", enabled: true, ...extra });
+const coupon = (extra: Partial<Coupon>): Coupon => ({ id: "k1", code: "SAVE", type: "percent", value: 10, usageLimit: null, uses: 0, expiresAt: "2026-12-31", active: true, ...extra });
 const line = (productId: string, quantity = 1): CartLine => ({ productId, quantity, color: "Oat", size: "" });
 
 const products = [product("quilt", 300, { compareAt: 550 }), product("mug", 50, { categoryId: "kitchen", brand: "Dorsha" }), product("pillow", 100)];
@@ -14,11 +14,11 @@ describe("product shelf pricing", () => {
   it("shows compareAt as the struck price with the percent saved", () => {
     expect(productPricingFor(products[0], [], NOW)).toMatchObject({ price: 300, was: 550, percentOff: 45 });
   });
-  it("prices an unconditional percent campaign into the shelf price", () => {
+  it("prices a percent campaign into the shelf price", () => {
     expect(productPricingFor(products[2], [campaign({ value: 20 })], NOW)).toMatchObject({ price: 80, was: 100, percentOff: 20, offer: undefined });
   });
-  it("shows fixed, free-delivery and conditional percent campaigns as an offer, not a new price", () => {
-    for (const offer of [campaign({ type: "fixed", value: 30 }), campaign({ type: "free_shipping", value: 0 }), campaign({ minSpend: 200 }), campaign({ maxDiscount: 15 })]) {
+  it("shows fixed and free-delivery campaigns as an offer, not a new price", () => {
+    for (const offer of [campaign({ type: "fixed", value: 30 }), campaign({ type: "free_shipping", value: 0 })]) {
       const pricing = productPricingFor(products[2], [offer], NOW);
       expect(pricing.price).toBe(100);
       expect(pricing.offer?.id).toBe("c1");
@@ -35,7 +35,7 @@ describe("product shelf pricing", () => {
 });
 
 describe("campaigns at checkout", () => {
-  it("matches the shelf price for an unconditional percent campaign", () => {
+  it("matches the shelf price for a percent campaign", () => {
     const result = campaignFor([line("pillow", 3)], { products, campaigns: [campaign({ value: 20 })] }, NOW);
     expect(300 - result.discount).toBe(productPricingFor(products[2], [campaign({ value: 20 })], NOW).price * 3);
   });
@@ -43,10 +43,13 @@ describe("campaigns at checkout", () => {
     expect(campaignFor([line("pillow", 2)], { products, campaigns: [campaign({ type: "fixed", value: 30 })] }, NOW).discount).toBe(30);
     expect(campaignFor([line("mug")], { products, campaigns: [campaign({ type: "fixed", value: 80 })] }, NOW).discount).toBe(50);
   });
-  it("respects minimum eligible spend and maximum discount", () => {
-    expect(campaignFor([line("pillow")], { products, campaigns: [campaign({ minSpend: 150 })] }, NOW).campaign).toBeNull();
-    expect(campaignFor([line("pillow", 2)], { products, campaigns: [campaign({ minSpend: 150 })] }, NOW).discount).toBe(20);
-    expect(campaignFor([line("quilt")], { products, campaigns: [campaign({ value: 50, maxDiscount: 100 })] }, NOW).discount).toBe(100);
+  it("reports the saving as a percentage of the items it covers", () => {
+    expect(campaignFor([line("pillow")], { products, campaigns: [campaign({})] }, NOW)).toMatchObject({ discount: 10, percentOff: 10 });
+    expect(campaignFor([line("pillow"), line("mug")], { products, campaigns: [campaign({ type: "fixed", value: 30 })] }, NOW).percentOff).toBe(20);
+  });
+  it("picks the earliest-starting live campaign when several cover the bag", () => {
+    const later = campaign({ id: "c2", value: 30, startsAt: "2026-10-10T00:00" });
+    expect(campaignFor([line("pillow")], { products, campaigns: [later, campaign({})] }, NOW).campaign?.id).toBe("c1");
   });
   it("discounts only targeted products", () => {
     const result = campaignFor([line("pillow"), line("mug")], { products, campaigns: [campaign({ value: 50, targetType: "products", targetValues: ["mug"] })] }, NOW);
@@ -75,11 +78,6 @@ describe("coupons", () => {
     const categoryCoupon = coupon({ value: 10, categoryIds: ["bedding"] });
     expect(couponFor("SAVE", [line("pillow"), line("mug")], catalog([categoryCoupon]), NOW).discount).toBe(10);
     expect(couponFor("SAVE", [line("mug")], catalog([categoryCoupon]), NOW).valid).toBe(false);
-  });
-  it("counts the minimum spend on the targeted items after the campaign", () => {
-    const result = couponFor("SAVE", [line("pillow"), line("mug", 4)], catalog([coupon({ minSpend: 150, productIds: ["pillow"] })]), NOW);
-    expect(result.valid).toBe(false);
-    expect(result.message).toContain("more to use this code");
   });
   it("shares the campaign saving across its items when only some are coupon targets", () => {
     // Fixed 30 campaign on pillow (100) + mug (50): the mug carries 10 of it, so a 50% mug coupon takes 20.
@@ -112,5 +110,16 @@ describe("cart totals", () => {
   it("adds campaign and coupon savings into one total", () => {
     const totals = cartTotalsFor([line("quilt")], "SAVE", { products, campaigns: [campaign({ value: 45 })], coupons: [coupon({})] }, "delivery", NOW);
     expect(totals).toMatchObject({ subtotal: 300, discount: 151.5, shipping: 18, total: 166.5 });
+    expect(totals.coupon.percentOff).toBe(10);
+  });
+  it("gives each line a struck original and a payable price that add up to the total", () => {
+    const totals = cartTotalsFor([line("pillow", 2), line("mug")], "SAVE", { products, campaigns: [campaign({ value: 20, targetType: "products", targetValues: ["pillow"] })], coupons: [coupon({ productIds: ["mug"] })] }, "delivery", NOW);
+    expect(totals.lines.map(({ price, was, percentOff }) => ({ price, was, percentOff }))).toEqual([{ price: 160, was: 200, percentOff: 20 }, { price: 45, was: 50, percentOff: 10 }]);
+    expect(totals.lines.reduce((sum, item) => sum + item.price, 0)).toBe(totals.subtotal - totals.discount);
+  });
+  it("strikes the compare-at price on lines with no campaign or coupon", () => {
+    const [quilt] = cartTotalsFor([line("quilt")], null, { products, campaigns: [], coupons: [] }, "delivery", NOW).lines;
+    expect(quilt).toMatchObject({ price: 300, was: 550, percentOff: 45 });
+    expect(cartTotalsFor([line("pillow")], null, { products, campaigns: [], coupons: [] }, "delivery", NOW).lines[0].was).toBeUndefined();
   });
 });

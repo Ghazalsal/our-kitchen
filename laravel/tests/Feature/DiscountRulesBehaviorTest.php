@@ -89,14 +89,15 @@ class DiscountRulesBehaviorTest extends TestCase
 
     private function coupon(User $admin, array $data): void
     {
-        $request = Request::create('/api/coupons/'.self::COUPONS[0], 'PUT', ['code' => 'DISCOUNTTEST', 'minSpend' => 0, 'expiresAt' => now()->addMonth()->toDateString(), 'active' => true, 'categoryIds' => [], 'productIds' => [], ...$data]);
+        $request = Request::create('/api/coupons/'.self::COUPONS[0], 'PUT', ['code' => 'DISCOUNTTEST', 'expiresAt' => now()->addMonth()->toDateString(), 'active' => true, 'categoryIds' => [], 'productIds' => [], ...$data]);
         $request->setUserResolver(static fn () => $admin);
         app(StoreApiController::class)->saveCoupon($request, self::COUPONS[0]);
     }
 
     private function campaign(User $admin, array $data): void
     {
-        $request = Request::create('/api/campaigns/'.self::CAMPAIGNS[0], 'PUT', ['name' => 'Discount test', 'minSpend' => 0, 'startsAt' => now()->subMinute()->toDateTimeString(), 'endsAt' => now()->addHour()->toDateTimeString(), 'enabled' => true, 'priority' => 1000, ...$data]);
+        // The earliest-starting live campaign wins, so start long ago to beat any campaign already in the database.
+        $request = Request::create('/api/campaigns/'.self::CAMPAIGNS[0], 'PUT', ['name' => 'Discount test', 'startsAt' => now()->subYears(20)->toDateTimeString(), 'endsAt' => now()->addHour()->toDateTimeString(), 'enabled' => true, ...$data]);
         $request->setUserResolver(static fn () => $admin);
         app(StoreApiController::class)->saveCampaign($request, self::CAMPAIGNS[0]);
     }

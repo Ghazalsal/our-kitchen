@@ -86,7 +86,7 @@ function CampaignCountdown({ campaigns }: { campaigns: import("@/lib/types").Cam
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => { const timer = window.setInterval(() => setNow(Date.now()), 1000); return () => window.clearInterval(timer); }, []);
   const available = campaigns.filter((campaign) => campaign.enabled && new Date(campaign.endsAt).getTime() > now);
-  const sortCampaigns = (items: typeof available) => items.sort((a, b) => b.priority - a.priority || new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime());
+  const sortCampaigns = (items: typeof available) => items.sort((a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime());
   const active = sortCampaigns(available.filter((campaign) => new Date(campaign.startsAt).getTime() <= now))[0] ?? sortCampaigns(available.filter((campaign) => new Date(campaign.startsAt).getTime() > now))[0];
   if (!active) return null;
   const startsAt = new Date(active.startsAt).getTime(); const endsAt = new Date(active.endsAt).getTime(); const isLive = startsAt <= now; const remaining = Math.max(0, (isLive ? endsAt : startsAt) - now);

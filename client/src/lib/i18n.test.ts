@@ -62,7 +62,6 @@ describe("Arabic coverage", () => {
   it("translates offer labels, coupon hints and product aria labels", () => {
     expect(translateText("20% off", "ar")).toBe("خصم 20%");
     expect(translateText("Free delivery", "ar")).toBe("توصيل مجاني");
-    expect(translateText("Add ₪50 more to use this code.", "ar")).toBe("أضف ₪50 لاستخدام هذا الرمز.");
     expect(translateText("Add Lemnos quilt to bag", "ar")).toBe("أضف Lemnos quilt إلى السلة");
   });
 });

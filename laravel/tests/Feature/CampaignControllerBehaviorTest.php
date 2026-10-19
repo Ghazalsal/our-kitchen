@@ -39,9 +39,9 @@ class CampaignControllerBehaviorTest extends TestCase
                 $this->assertSame(403, $exception->getStatusCode());
             }
 
-            $live = ['name' => 'Live campaign', 'type' => 'percent', 'value' => 15, 'minSpend' => 0, 'targetType' => 'categories', 'targetValues' => ['dorsha-cups'], 'startsAt' => now()->subMinute()->toDateTimeString(), 'endsAt' => now()->addHour()->toDateTimeString(), 'enabled' => true, 'priority' => 1];
+            $live = ['name' => 'Live campaign', 'type' => 'percent', 'value' => 15, 'targetType' => 'categories', 'targetValues' => ['dorsha-cups'], 'startsAt' => now()->subMinute()->toDateTimeString(), 'endsAt' => now()->addHour()->toDateTimeString(), 'enabled' => true];
             $this->assertSame('dorsha-cups', $controller->saveCampaign($requestFor($admin, $live), 'campaign-feature-live')->getData(true)['targetValues'][0]);
-            $future = [...$live, 'name' => 'Future campaign', 'value' => 45, 'startsAt' => now()->addHour()->toDateTimeString(), 'endsAt' => now()->addHours(2)->toDateTimeString(), 'priority' => 99];
+            $future = [...$live, 'name' => 'Future campaign', 'value' => 45, 'startsAt' => now()->addHour()->toDateTimeString(), 'endsAt' => now()->addHours(2)->toDateTimeString()];
             $controller->saveCampaign($requestFor($admin, $future), 'campaign-feature-future');
 
             $orderRequest = Request::create('/api/orders', 'POST', ['order' => ['id' => $orderId, 'address' => 'Campaign feature address', 'lines' => [['productId' => 'dorsha-ember-cup-set', 'color' => 'Oat', 'quantity' => 1]], 'subtotal' => 0, 'discount' => 0, 'shipping' => 0, 'total' => 0]]);
