@@ -5,7 +5,7 @@ import { Link } from "wouter";
 import { StorefrontShell, useDealsGuard } from "@/components/StorefrontShell";
 import { ProductCard } from "@/components/ProductCard";
 import { useStore } from "@/contexts/StoreContext";
-import { formatILS } from "@/lib/money";
+import { formatILS, offerLabel } from "@/lib/money";
 
 const hero = "/catalog/home-hero.jpg";
 
@@ -90,8 +90,10 @@ function CampaignCountdown({ campaigns }: { campaigns: import("@/lib/types").Cam
   const active = sortCampaigns(available.filter((campaign) => new Date(campaign.startsAt).getTime() <= now))[0] ?? sortCampaigns(available.filter((campaign) => new Date(campaign.startsAt).getTime() > now))[0];
   if (!active) return null;
   const startsAt = new Date(active.startsAt).getTime(); const endsAt = new Date(active.endsAt).getTime(); const isLive = startsAt <= now; const remaining = Math.max(0, (isLive ? endsAt : startsAt) - now);
-  const hours = Math.floor(remaining / 3_600_000); const minutes = Math.floor((remaining % 3_600_000) / 60_000); const seconds = Math.floor((remaining % 60_000) / 1_000);
-  const offer = active.type === "percent" ? `${active.value}% off` : active.type === "fixed" ? `${formatILS(active.value)} off` : "Free delivery";
-  return <section className="bg-[#C0632D] py-5 text-[#FFF9F3]"><div className="container flex flex-wrap items-center justify-between gap-5"><div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#FFE0C6]">{isLive ? "Live now" : "Coming soon"}</p><h2 className="mt-1 text-3xl leading-none md:text-4xl">{active.name} <span className="font-sans text-base font-bold">· {offer}</span></h2></div><div className="flex items-center gap-2 text-center"><TimeUnit value={hours} label="hours" /><span className="text-2xl">:</span><TimeUnit value={minutes} label="mins" /><span className="text-2xl">:</span><TimeUnit value={seconds} label="secs" /><span className="ml-2 text-xs font-bold uppercase tracking-[0.14em] text-[#FFE0C6]">{isLive ? "ends in" : "starts in"}</span></div><Link href="/shop" className="border border-[#FFE0C6]/80 px-4 py-3 text-[10px] font-bold uppercase tracking-[0.14em] transition hover:bg-[#17130F] hover:border-[#17130F]">Shop the offer <ArrowUpRight size={14} className="inline" /></Link></div></section>;
+  // Long campaigns read as "3 days : 01 hours"; inside the last three days the clock switches to hours : mins : secs.
+  const showDays = remaining >= 3 * 86_400_000;
+  const days = Math.floor(remaining / 86_400_000); const hours = Math.floor((showDays ? remaining % 86_400_000 : remaining) / 3_600_000); const minutes = Math.floor((remaining % 3_600_000) / 60_000); const seconds = Math.floor((remaining % 60_000) / 1_000);
+  const offer = offerLabel(active);
+  return <section className="bg-[#C0632D] py-5 text-[#FFF9F3]"><div className="container flex flex-wrap items-center justify-between gap-5"><div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#FFE0C6]">{isLive ? "Live now" : "Coming soon"}</p><h2 className="mt-1 text-3xl leading-none md:text-4xl">{active.name} <span className="font-sans text-base font-bold">· {offer}</span></h2></div><div className="flex items-center gap-2 text-center">{showDays ? <><TimeUnit value={days} label="days" /><span className="text-2xl">:</span><TimeUnit value={hours} label="hours" /></> : <><TimeUnit value={hours} label="hours" /><span className="text-2xl">:</span><TimeUnit value={minutes} label="mins" /><span className="text-2xl">:</span><TimeUnit value={seconds} label="secs" /></>}<span className="ml-2 text-xs font-bold uppercase tracking-[0.14em] text-[#FFE0C6]">{isLive ? "ends in" : "starts in"}</span></div><Link href="/shop" className="border border-[#FFE0C6]/80 px-4 py-3 text-[10px] font-bold uppercase tracking-[0.14em] transition hover:bg-[#17130F] hover:border-[#17130F]">Shop the offer <ArrowUpRight size={14} className="inline" /></Link></div></section>;
 }
 function TimeUnit({ value, label }: { value: number; label: string }) { return <span><b className="block min-w-10 font-['Fraunces'] text-3xl leading-none tabular-nums">{String(value).padStart(2, "0")}</b><small className="mt-1 block text-[9px] font-bold uppercase tracking-[0.12em] text-[#FFE0C6]">{label}</small></span>; }

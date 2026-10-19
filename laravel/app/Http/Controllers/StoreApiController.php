@@ -86,7 +86,8 @@ class StoreApiController extends Controller
     {
         $this->requireAdmin($request);
         $coupon = array_merge($request->all(), ['id' => $id]);
-        $request->validate(['code' => ['required', 'string', 'max:80'], 'type' => ['required', 'in:percent,fixed,free_shipping'], 'value' => ['required', 'numeric'], 'expiresAt' => ['required', 'date'], 'usageLimit' => ['nullable', 'integer', 'min:0'], 'categoryIds' => ['nullable', 'array'], 'productIds' => ['nullable', 'array']]);
+        $request->validate(['code' => ['required', 'string', 'max:80'], 'type' => ['required', 'in:percent,fixed,free_shipping'], 'value' => ['required', 'numeric', 'min:0'], 'expiresAt' => ['required', 'date'], 'usageLimit' => ['nullable', 'integer', 'min:0'], 'categoryIds' => ['nullable', 'array'], 'productIds' => ['nullable', 'array']]);
+        abort_if($coupon['type'] === 'percent' && (float) $coupon['value'] > 100, 422, 'A percent discount cannot exceed 100%.');
         $this->upsertCoupon($coupon);
         return response()->json($this->couponById($id));
     }
@@ -108,13 +109,14 @@ class StoreApiController extends Controller
             'value' => ['required', 'numeric', 'min:0'],
             'minSpend' => ['nullable', 'numeric', 'min:0'],
             'maxDiscount' => ['nullable', 'numeric', 'min:0'],
-            'targetType' => ['required', 'in:all,brand,categories'],
+            'targetType' => ['required', 'in:all,brand,categories,products'],
             'targetValues' => ['nullable', 'array'],
             'startsAt' => ['required', 'date'],
             'endsAt' => ['required', 'date', 'after:startsAt'],
             'enabled' => ['boolean'],
             'priority' => ['nullable', 'integer', 'min:0', 'max:1000'],
         ])->validate();
+        abort_if($campaign['type'] === 'percent' && (float) $campaign['value'] > 100, 422, 'A percent discount cannot exceed 100%.');
         if ($campaign['targetType'] !== 'all') abort_if(empty($campaign['targetValues']), 422, 'Select at least one campaign target.');
         $campaign['targetValues'] = $campaign['targetType'] === 'all' ? [] : array_values($campaign['targetValues'] ?? []);
         $this->upsertCampaign($campaign);
@@ -172,8 +174,8 @@ class StoreApiController extends Controller
             return ['productId' => $product->id, 'color' => (string) ($line['color'] ?? ''), 'size' => (string) ($line['size'] ?? ''), 'quantity' => (int) $line['quantity'], 'name' => $product->name, 'price' => (float) $product->price, 'image' => $product->image, 'brand' => $product->brand, 'categoryId' => $product->categoryId];
         })->all();
         $subtotal = round(collect($lines)->sum(fn (array $line) => $line['price'] * $line['quantity']), 2);
-        $coupon = $this->couponDiscount((string) ($order['couponCode'] ?? ''), $lines, $subtotal);
         $campaign = $this->campaignDiscount($lines, $subtotal);
+        $coupon = $this->couponDiscount((string) ($order['couponCode'] ?? ''), $lines, $campaign);
         $discount = min($subtotal, round($coupon['discount'] + $campaign['discount'], 2));
         $shipping = $order['fulfillment'] === 'pickup' || $coupon['freeShipping'] || $campaign['freeShipping'] || $subtotal >= 500 ? 0 : 18;
         $order = array_merge($order, ['lines' => $lines, 'subtotal' => $subtotal, 'discount' => $discount, 'shipping' => $shipping, 'total' => max(0, round($subtotal - $discount + $shipping, 2)), 'couponCode' => $coupon['coupon']?->code, 'campaignId' => $campaign['campaign']?->id]);
@@ -341,31 +343,52 @@ class StoreApiController extends Controller
     private function notificationRow(object $row): array { return ['id' => $row->id, 'audience' => $row->audience, 'title' => $row->title, 'body' => $row->body, 'orderId' => $row->orderId, 'createdAt' => (string) $row->createdAt, 'read' => (bool) $row->read]; }
     private function notify(string $audience, string $title, string $body, ?string $orderId = null): void { $userId = $audience === 'customer' && $orderId ? DB::table('kitchen_orders')->where('id', $orderId)->value('user_id') : null; DB::table('kitchen_notifications')->insert(['id' => 'note-'.Str::uuid(), 'audience' => $audience, 'user_id' => $userId, 'title' => $title, 'body' => $body, 'orderId' => $orderId, 'createdAt' => now(), 'read' => false]); }
 
-    private function couponDiscount(string $code, array $lines, float $subtotal): array
+    /**
+     * Mirrors client/src/lib/pricing.ts couponFor: a coupon discounts only the items it covers (all items when no collection
+     * or product is selected), measured after the campaign's saving is shared across the campaign's items by value.
+     */
+    private function couponDiscount(string $code, array $lines, array $campaign): array
     {
-        if (!$code) return ['coupon' => null, 'discount' => 0, 'freeShipping' => false];
+        $none = ['coupon' => null, 'discount' => 0, 'freeShipping' => false];
+        if (!$code) return $none;
         $coupon = DB::table('kitchen_coupons')->whereRaw('LOWER(code) = ?', [strtolower($code)])->first();
-        if (!$coupon || !$coupon->active || now()->greaterThan($coupon->expiresAt) || $subtotal < (float) $coupon->minSpend) return ['coupon' => null, 'discount' => 0, 'freeShipping' => false];
-        if ((int) $coupon->usageLimit > 0 && (int) $coupon->uses >= (int) $coupon->usageLimit) return ['coupon' => null, 'discount' => 0, 'freeShipping' => false];
-        $categories = $this->decode($coupon->categoryIds);
-        if ($categories && collect($lines)->contains(fn (array $line) => !in_array($line['categoryId'], $categories, true))) return ['coupon' => null, 'discount' => 0, 'freeShipping' => false];
-        $productIds = $this->decode($coupon->productIds ?? null);
-        if ($productIds && collect($lines)->contains(fn (array $line) => !in_array($line['productId'], $productIds, true))) return ['coupon' => null, 'discount' => 0, 'freeShipping' => false];
-        $discount = $coupon->type === 'percent' ? min($subtotal * ((float) $coupon->value / 100), $coupon->maxDiscount ?? INF) : ($coupon->type === 'fixed' ? min((float) $coupon->value, $subtotal) : 0);
+        // expiresAt is a date column: the code stays valid through the whole of that day.
+        if (!$coupon || !$coupon->active || now()->startOfDay()->greaterThan($coupon->expiresAt)) return $none;
+        if ((int) $coupon->usageLimit > 0 && (int) $coupon->uses >= (int) $coupon->usageLimit) return $none;
+        $categories = array_filter($this->decode($coupon->categoryIds));
+        $productIds = array_filter($this->decode($coupon->productIds ?? null));
+        $eligible = collect($lines)->filter(fn (array $line) => (!$categories && !$productIds) || in_array($line['categoryId'], $categories, true) || in_array($line['productId'], $productIds, true));
+        if ($eligible->isEmpty()) return $none;
+        $lineTotal = fn (array $line) => $line['price'] * $line['quantity'];
+        $campaignShare = 0;
+        if ($campaign['campaign'] && $campaign['eligibleSubtotal'] > 0) {
+            $campaignShare = $campaign['discount'] * (float) $eligible->filter(fn (array $line) => $this->campaignTargets($campaign['campaign'], $line))->sum($lineTotal) / $campaign['eligibleSubtotal'];
+        }
+        $payable = round((float) $eligible->sum($lineTotal) - $campaignShare, 2);
+        if ($payable < (float) $coupon->minSpend) return $none;
+        $discount = $coupon->type === 'percent' ? min($payable * ((float) $coupon->value / 100), (float) $coupon->maxDiscount ?: INF) : ($coupon->type === 'fixed' ? min((float) $coupon->value, $payable) : 0);
         return ['coupon' => $coupon, 'discount' => round($discount, 2), 'freeShipping' => $coupon->type === 'free_shipping'];
+    }
+
+    private function campaignTargets(object $campaign, array $line): bool
+    {
+        $targets = $this->decode($campaign->targetValues);
+        return $campaign->targetType === 'all'
+            || ($campaign->targetType === 'brand' && in_array($line['brand'], $targets, true))
+            || ($campaign->targetType === 'categories' && in_array($line['categoryId'], $targets, true))
+            || ($campaign->targetType === 'products' && in_array($line['productId'], $targets, true));
     }
 
     private function campaignDiscount(array $lines, float $subtotal): array
     {
         $campaigns = DB::table('kitchen_campaigns')->where('enabled', true)->where('startsAt', '<=', now())->where('endsAt', '>', now())->orderByDesc('priority')->orderBy('startsAt')->get();
         foreach ($campaigns as $campaign) {
-            $targets = $this->decode($campaign->targetValues);
-            $eligible = collect($lines)->filter(fn (array $line) => $campaign->targetType === 'all' || ($campaign->targetType === 'brand' && in_array($line['brand'], $targets, true)) || ($campaign->targetType === 'categories' && in_array($line['categoryId'], $targets, true)));
+            $eligible = collect($lines)->filter(fn (array $line) => $this->campaignTargets($campaign, $line));
             $eligibleSubtotal = (float) $eligible->sum(fn (array $line) => $line['price'] * $line['quantity']);
             if ($eligible->isEmpty() || $eligibleSubtotal < (float) $campaign->minSpend) continue;
-            $discount = $campaign->type === 'percent' ? min($eligibleSubtotal * ((float) $campaign->value / 100), $campaign->maxDiscount ?? INF) : ($campaign->type === 'fixed' ? min((float) $campaign->value, $eligibleSubtotal) : 0);
-            return ['campaign' => $campaign, 'discount' => round($discount, 2), 'freeShipping' => $campaign->type === 'free_shipping'];
+            $discount = $campaign->type === 'percent' ? min($eligibleSubtotal * ((float) $campaign->value / 100), (float) $campaign->maxDiscount ?: INF) : ($campaign->type === 'fixed' ? min((float) $campaign->value, $eligibleSubtotal) : 0);
+            return ['campaign' => $campaign, 'eligibleSubtotal' => round($eligibleSubtotal, 2), 'discount' => round($discount, 2), 'freeShipping' => $campaign->type === 'free_shipping'];
         }
-        return ['campaign' => null, 'discount' => 0, 'freeShipping' => false];
+        return ['campaign' => null, 'eligibleSubtotal' => 0, 'discount' => 0, 'freeShipping' => false];
     }
 }
