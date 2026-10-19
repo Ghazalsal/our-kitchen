@@ -61,8 +61,6 @@ export interface Coupon {
   code: string;
   type: "percent" | "fixed" | "free_shipping";
   value: number;
-  minSpend: number;
-  maxDiscount?: number;
   /** Maximum number of redemptions. Leave unset (or 0) for unlimited use. */
   usageLimit?: number | null;
   uses: number;
@@ -133,6 +131,8 @@ export interface CouponResult {
   valid: boolean;
   message: string;
   discount: number;
+  /** `discount` as a percentage of the items the code covers. */
+  percentOff: number;
   freeShipping: boolean;
 }
 
@@ -144,20 +144,19 @@ export interface Campaign {
   name: string;
   type: CampaignType;
   value: number;
-  minSpend: number;
-  maxDiscount?: number;
   targetType: CampaignTargetType;
   targetValues: string[];
   startsAt: string;
   endsAt: string;
   enabled: boolean;
-  priority: number;
 }
 
 export interface CampaignResult {
   campaign: Campaign | null;
   eligibleSubtotal: number;
   discount: number;
+  /** `discount` as a percentage of the items the campaign covers. */
+  percentOff: number;
   freeShipping: boolean;
 }
 
@@ -171,6 +170,15 @@ export interface CartTotals {
   discount: number;
   shipping: number;
   total: number;
+  /** Per bag line: what it costs after the campaign and coupon, and the struck price when that is lower. */
+  lines: CartLinePrice[];
+}
+
+export interface CartLinePrice {
+  line: CartLine;
+  price: number;
+  was?: number;
+  percentOff: number;
 }
 
 /** What a shopper sees on the shelf: the price to pay, and the struck-through price when it is lower. */
@@ -179,6 +187,6 @@ export interface ProductPricing {
   was?: number;
   percentOff: number;
   /** A live campaign covering this product that is applied at checkout rather than baked into `price`
-   *  (fixed amount, free delivery, or a percent with a minimum spend or cap). */
+   *  (fixed amount or free delivery). */
   offer?: Campaign;
 }

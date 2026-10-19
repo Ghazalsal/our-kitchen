@@ -113,10 +113,10 @@ export const products: Product[] = [
 ];
 
 export const coupons: Coupon[] = [
-  { id: "copper10", code: "COPPER10", type: "percent", value: 10, minSpend: 150, maxDiscount: 70, usageLimit: 100, uses: 8, expiresAt: "2026-12-31", active: true },
-  { id: "bake-25", code: "BAKE25", type: "fixed", value: 25, minSpend: 220, usageLimit: 40, uses: 11, expiresAt: "2026-10-01", categoryIds: ["bake"], active: true },
-  { id: "countership", code: "COUNTERSHIP", type: "free_shipping", value: 0, minSpend: 80, usageLimit: null, uses: 31, expiresAt: "2026-12-31", active: true },
-  { id: "mixer-only", code: "MIXERLOVE", type: "percent", value: 15, minSpend: 0, usageLimit: 50, uses: 3, expiresAt: "2026-12-31", productIds: ["morrow-mixer"], active: true },
+  { id: "copper10", code: "COPPER10", type: "percent", value: 10, usageLimit: 100, uses: 8, expiresAt: "2026-12-31", active: true },
+  { id: "bake-25", code: "BAKE25", type: "fixed", value: 25, usageLimit: 40, uses: 11, expiresAt: "2026-10-01", categoryIds: ["bake"], active: true },
+  { id: "countership", code: "COUNTERSHIP", type: "free_shipping", value: 0, usageLimit: null, uses: 31, expiresAt: "2026-12-31", active: true },
+  { id: "mixer-only", code: "MIXERLOVE", type: "percent", value: 15, usageLimit: 50, uses: 3, expiresAt: "2026-12-31", productIds: ["morrow-mixer"], active: true },
 ];
 
 export const campaigns: Campaign[] = [];

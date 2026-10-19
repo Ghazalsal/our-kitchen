@@ -107,14 +107,11 @@ class StoreApiController extends Controller
             'name' => ['required', 'string', 'max:160'],
             'type' => ['required', 'in:percent,fixed,free_shipping'],
             'value' => ['required', 'numeric', 'min:0'],
-            'minSpend' => ['nullable', 'numeric', 'min:0'],
-            'maxDiscount' => ['nullable', 'numeric', 'min:0'],
             'targetType' => ['required', 'in:all,brand,categories,products'],
             'targetValues' => ['nullable', 'array'],
             'startsAt' => ['required', 'date'],
             'endsAt' => ['required', 'date', 'after:startsAt'],
             'enabled' => ['boolean'],
-            'priority' => ['nullable', 'integer', 'min:0', 'max:1000'],
         ])->validate();
         abort_if($campaign['type'] === 'percent' && (float) $campaign['value'] > 100, 422, 'A percent discount cannot exceed 100%.');
         if ($campaign['targetType'] !== 'all') abort_if(empty($campaign['targetValues']), 422, 'Select at least one campaign target.');
@@ -293,7 +290,7 @@ class StoreApiController extends Controller
     private function storeState(?User $user): array
     {
         $activity = $this->activityState($user);
-        $campaigns = DB::table('kitchen_campaigns')->orderByDesc('priority')->orderBy('startsAt');
+        $campaigns = DB::table('kitchen_campaigns')->orderBy('startsAt');
         if (!$user || $user->role !== 'admin') $campaigns->where('enabled', true)->where('endsAt', '>', now());
 
         $productsQuery = DB::table('kitchen_products')->orderByDesc('updated_at');
@@ -323,8 +320,8 @@ class StoreApiController extends Controller
 
     private function upsertCategory(array $data): void { DB::table('kitchen_categories')->updateOrInsert(['id' => $data['id']], ['name' => $data['name'], 'description' => $data['description'] ?? '', 'image' => $data['image'] ?? '', 'hue' => $data['hue'] ?? 'copper', 'updated_at' => now(), 'created_at' => now()]); }
     private function upsertProduct(array $data): void { DB::table('kitchen_products')->updateOrInsert(['id' => $data['id']], ['name' => $data['name'], 'brand' => $data['brand'], 'price' => $data['price'], 'compareAt' => $data['compareAt'] ?? null, 'categoryId' => $data['categoryId'], 'image' => $data['image'], 'gallery' => json_encode($data['gallery'] ?? []), 'description' => $data['description'] ?? '', 'features' => json_encode($data['features'] ?? []), 'stock' => $data['stock'] ?? 0, 'colors' => json_encode($data['colors'] ?? []), 'sizes' => json_encode($data['sizes'] ?? []), 'variantImages' => json_encode($data['variantImages'] ?? []), 'featured' => !empty($data['featured']), 'deal' => !empty($data['deal']), 'published' => (bool) ($data['published'] ?? true), 'updated_at' => now(), 'created_at' => now()]); }
-    private function upsertCoupon(array $data): void { DB::table('kitchen_coupons')->updateOrInsert(['id' => $data['id']], ['code' => strtoupper($data['code']), 'type' => $data['type'], 'value' => $data['value'], 'minSpend' => $data['minSpend'] ?? 0, 'maxDiscount' => $data['maxDiscount'] ?? null, 'usageLimit' => $data['usageLimit'] ?? 0, 'uses' => $data['uses'] ?? 0, 'expiresAt' => $data['expiresAt'], 'active' => $data['active'] ?? true, 'categoryIds' => json_encode($data['categoryIds'] ?? []), 'productIds' => json_encode($data['productIds'] ?? []), 'updated_at' => now(), 'created_at' => now()]); }
-    private function upsertCampaign(array $data): void { DB::table('kitchen_campaigns')->updateOrInsert(['id' => $data['id']], ['name' => $data['name'], 'type' => $data['type'], 'value' => $data['value'] ?? 0, 'minSpend' => $data['minSpend'] ?? 0, 'maxDiscount' => $data['maxDiscount'] ?? null, 'targetType' => $data['targetType'], 'targetValues' => json_encode($data['targetValues'] ?? []), 'startsAt' => $data['startsAt'], 'endsAt' => $data['endsAt'], 'enabled' => $data['enabled'] ?? true, 'priority' => $data['priority'] ?? 0, 'updated_at' => now(), 'created_at' => now()]); }
+    private function upsertCoupon(array $data): void { DB::table('kitchen_coupons')->updateOrInsert(['id' => $data['id']], ['code' => strtoupper($data['code']), 'type' => $data['type'], 'value' => $data['value'], 'usageLimit' => $data['usageLimit'] ?? 0, 'uses' => $data['uses'] ?? 0, 'expiresAt' => $data['expiresAt'], 'active' => $data['active'] ?? true, 'categoryIds' => json_encode($data['categoryIds'] ?? []), 'productIds' => json_encode($data['productIds'] ?? []), 'updated_at' => now(), 'created_at' => now()]); }
+    private function upsertCampaign(array $data): void { DB::table('kitchen_campaigns')->updateOrInsert(['id' => $data['id']], ['name' => $data['name'], 'type' => $data['type'], 'value' => $data['value'] ?? 0, 'targetType' => $data['targetType'], 'targetValues' => json_encode($data['targetValues'] ?? []), 'startsAt' => $data['startsAt'], 'endsAt' => $data['endsAt'], 'enabled' => $data['enabled'] ?? true, 'updated_at' => now(), 'created_at' => now()]); }
     private function productById(string $id): ?array { $row = DB::table('kitchen_products')->where('id', $id)->first(); return $row ? $this->productRow($row) : null; }
     private function couponById(string $id): ?array { $row = DB::table('kitchen_coupons')->where('id', $id)->first(); return $row ? $this->couponRow($row) : null; }
     private function campaignById(string $id): ?array { $row = DB::table('kitchen_campaigns')->where('id', $id)->first(); return $row ? $this->campaignRow($row) : null; }
@@ -336,8 +333,8 @@ class StoreApiController extends Controller
     private function productRow(object $row): array { return ['id' => $row->id, 'name' => $row->name, 'brand' => $row->brand, 'price' => (float) $row->price, 'compareAt' => $row->compareAt ? (float) $row->compareAt : null, 'categoryId' => $row->categoryId, 'image' => $row->image, 'gallery' => $this->decode($row->gallery), 'description' => $row->description, 'features' => $this->decode($row->features), 'stock' => (int) $row->stock, 'colors' => $this->decode($row->colors), 'sizes' => $this->decode($row->sizes ?? null), 'variantImages' => $this->decode($row->variantImages ?? null), 'featured' => (bool) $row->featured, 'deal' => (bool) $row->deal, 'published' => (bool) $row->published]; }
     private function categoryRow(object $row): array { return ['id' => $row->id, 'name' => $row->name, 'description' => $row->description, 'image' => $row->image, 'hue' => $row->hue ?? 'copper']; }
     private function categoryById(string $id): ?array { $row = DB::table('kitchen_categories')->where('id', $id)->first(); return $row ? $this->categoryRow($row) : null; }
-    private function couponRow(object $row): array { return ['id' => $row->id, 'code' => $row->code, 'type' => $row->type, 'value' => (float) $row->value, 'minSpend' => (float) $row->minSpend, 'maxDiscount' => $row->maxDiscount ? (float) $row->maxDiscount : null, 'usageLimit' => (int) $row->usageLimit ?: null, 'uses' => (int) $row->uses, 'expiresAt' => (string) $row->expiresAt, 'active' => (bool) $row->active, 'categoryIds' => $this->decode($row->categoryIds), 'productIds' => $this->decode($row->productIds ?? null)]; }
-    private function campaignRow(object $row): array { return ['id' => $row->id, 'name' => $row->name, 'type' => $row->type, 'value' => (float) $row->value, 'minSpend' => (float) $row->minSpend, 'maxDiscount' => $row->maxDiscount ? (float) $row->maxDiscount : null, 'targetType' => $row->targetType, 'targetValues' => $this->decode($row->targetValues), 'startsAt' => (string) $row->startsAt, 'endsAt' => (string) $row->endsAt, 'enabled' => (bool) $row->enabled, 'priority' => (int) $row->priority]; }
+    private function couponRow(object $row): array { return ['id' => $row->id, 'code' => $row->code, 'type' => $row->type, 'value' => (float) $row->value, 'usageLimit' => (int) $row->usageLimit ?: null, 'uses' => (int) $row->uses, 'expiresAt' => (string) $row->expiresAt, 'active' => (bool) $row->active, 'categoryIds' => $this->decode($row->categoryIds), 'productIds' => $this->decode($row->productIds ?? null)]; }
+    private function campaignRow(object $row): array { return ['id' => $row->id, 'name' => $row->name, 'type' => $row->type, 'value' => (float) $row->value, 'targetType' => $row->targetType, 'targetValues' => $this->decode($row->targetValues), 'startsAt' => (string) $row->startsAt, 'endsAt' => (string) $row->endsAt, 'enabled' => (bool) $row->enabled]; }
     private function orderRow(object $row): array { return ['id' => $row->id, 'createdAt' => (string) $row->createdAt, 'status' => $row->status, 'customerName' => $row->customerName, 'customerEmail' => $row->customerEmail, 'customerPhone' => $row->customerPhone ?? null, 'address' => $row->address, 'fulfillment' => $row->fulfillment ?? 'delivery', 'subtotal' => (float) $row->subtotal, 'discount' => (float) $row->discount, 'shipping' => (float) $row->shipping, 'total' => (float) $row->total, 'couponCode' => $row->couponCode, 'campaignId' => $row->campaignId ?? null, 'lines' => DB::table('kitchen_order_lines')->where('orderId', $row->id)->get()->map(fn ($line) => ['productId' => $line->productId, 'color' => $line->color, 'size' => $line->size ?? '', 'quantity' => (int) $line->quantity, 'name' => $line->name, 'price' => (float) $line->price, 'image' => $line->image])->all()]; }
     private function messageRow(object $row): array { return ['id' => $row->id, 'orderId' => $row->orderId, 'sender' => $row->sender, 'body' => $row->body, 'createdAt' => (string) $row->createdAt]; }
     private function notificationRow(object $row): array { return ['id' => $row->id, 'audience' => $row->audience, 'title' => $row->title, 'body' => $row->body, 'orderId' => $row->orderId, 'createdAt' => (string) $row->createdAt, 'read' => (bool) $row->read]; }
@@ -365,8 +362,7 @@ class StoreApiController extends Controller
             $campaignShare = $campaign['discount'] * (float) $eligible->filter(fn (array $line) => $this->campaignTargets($campaign['campaign'], $line))->sum($lineTotal) / $campaign['eligibleSubtotal'];
         }
         $payable = round((float) $eligible->sum($lineTotal) - $campaignShare, 2);
-        if ($payable < (float) $coupon->minSpend) return $none;
-        $discount = $coupon->type === 'percent' ? min($payable * ((float) $coupon->value / 100), (float) $coupon->maxDiscount ?: INF) : ($coupon->type === 'fixed' ? min((float) $coupon->value, $payable) : 0);
+        $discount = $coupon->type === 'percent' ? $payable * min((float) $coupon->value, 100) / 100 :($coupon->type === 'fixed' ? min((float) $coupon->value, $payable) : 0);
         return ['coupon' => $coupon, 'discount' => round($discount, 2), 'freeShipping' => $coupon->type === 'free_shipping'];
     }
 
@@ -381,12 +377,12 @@ class StoreApiController extends Controller
 
     private function campaignDiscount(array $lines, float $subtotal): array
     {
-        $campaigns = DB::table('kitchen_campaigns')->where('enabled', true)->where('startsAt', '<=', now())->where('endsAt', '>', now())->orderByDesc('priority')->orderBy('startsAt')->get();
+        $campaigns = DB::table('kitchen_campaigns')->where('enabled', true)->where('startsAt', '<=', now())->where('endsAt', '>', now())->orderBy('startsAt')->get();
         foreach ($campaigns as $campaign) {
             $eligible = collect($lines)->filter(fn (array $line) => $this->campaignTargets($campaign, $line));
             $eligibleSubtotal = (float) $eligible->sum(fn (array $line) => $line['price'] * $line['quantity']);
-            if ($eligible->isEmpty() || $eligibleSubtotal < (float) $campaign->minSpend) continue;
-            $discount = $campaign->type === 'percent' ? min($eligibleSubtotal * ((float) $campaign->value / 100), (float) $campaign->maxDiscount ?: INF) : ($campaign->type === 'fixed' ? min((float) $campaign->value, $eligibleSubtotal) : 0);
+            if ($eligible->isEmpty()) continue;
+            $discount = $campaign->type === 'percent' ? $eligibleSubtotal * min((float) $campaign->value, 100) / 100 :($campaign->type === 'fixed' ? min((float) $campaign->value, $eligibleSubtotal) : 0);
             return ['campaign' => $campaign, 'eligibleSubtotal' => round($eligibleSubtotal, 2), 'discount' => round($discount, 2), 'freeShipping' => $campaign->type === 'free_shipping'];
         }
         return ['campaign' => null, 'eligibleSubtotal' => 0, 'discount' => 0, 'freeShipping' => false];

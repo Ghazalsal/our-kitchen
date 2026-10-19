@@ -215,11 +215,9 @@ export const enToAr: Record<string, string> = {
   "Set the rhythm clearly.": "حدّد الإيقاع بوضوح.",
   "Campaign name": "اسم الحملة",
   "Discount type": "نوع الخصم",
-  "Minimum eligible spend": "الحد الأدنى للإنفاق المؤهل",
-  "Maximum discount (optional)": "الحد الأقصى للخصم (اختياري)",
-  "Priority (higher wins)": "الأولوية (الأعلى يفوز)",
   "Starts at": "يبدأ في",
   "Ends at": "ينتهي في",
+  "Ends": "ينتهي",
   "Campaign enabled": "الحملة مفعّلة",
   "Campaign applies to": "تطبق الحملة على",
   "All products": "كل المنتجات",
@@ -298,7 +296,6 @@ export const enToAr: Record<string, string> = {
   "Free shipping": "توصيل مجاني",
   "Percent off": "نسبة الخصم",
   "Value": "القيمة",
-  "Minimum spend": "الحد الأدنى للإنفاق",
   "Usage limit": "حد الاستخدام",
   "Usage limit (optional)": "حد الاستخدام (اختياري)",
   "Unlimited": "غير محدود",
@@ -548,7 +545,6 @@ export const enToAr: Record<string, string> = {
   // Coupon and campaign offers
   "Free delivery": "توصيل مجاني",
   "Amount off (₪)": "قيمة الخصم (₪)",
-  "On orders over": "للطلبات فوق",
   "Enter a discount greater than zero.": "أدخل قيمة خصم أكبر من صفر.",
   "A percent discount cannot exceed 100%.": "لا يمكن أن تتجاوز نسبة الخصم 100%.",
   // Coupon checks (shown as toasts in the cart and checkout)
@@ -603,7 +599,6 @@ const patterns: Record<"en" | "ar", [RegExp, string][]> = {
   ar: [
     [/^New order (\S+) placed by (.+) for ₪([\d.,]+)\.$/, "طلب جديد $1 من $2 بقيمة ₪$3."],
     [/^(\S+) has been placed for ₪([\d.,]+)\.$/, "تم تقديم الطلب $1 بقيمة ₪$2."],
-    [/^Add (.+) more to use this code\.$/, "أضف $1 لاستخدام هذا الرمز."],
     [/^Add (.+) to bag$/, "أضف $1 إلى السلة"],
     [/^(.+) off$/, "خصم $1"],
   ],
