@@ -137,7 +137,7 @@ export interface CouponResult {
 }
 
 export type CampaignType = "percent" | "fixed" | "free_shipping";
-export type CampaignTargetType = "all" | "brand" | "categories";
+export type CampaignTargetType = "all" | "brand" | "categories" | "products";
 
 export interface Campaign {
   id: string;
@@ -159,4 +159,26 @@ export interface CampaignResult {
   eligibleSubtotal: number;
   discount: number;
   freeShipping: boolean;
+}
+
+export interface CartTotals {
+  subtotal: number;
+  coupon: CouponResult;
+  /** The coupon's share of `discount`; zero when the code is not valid for this cart. */
+  couponDiscount: number;
+  campaign: CampaignResult;
+  /** Campaign + coupon, never more than the subtotal. */
+  discount: number;
+  shipping: number;
+  total: number;
+}
+
+/** What a shopper sees on the shelf: the price to pay, and the struck-through price when it is lower. */
+export interface ProductPricing {
+  price: number;
+  was?: number;
+  percentOff: number;
+  /** A live campaign covering this product that is applied at checkout rather than baked into `price`
+   *  (fixed amount, free delivery, or a percent with a minimum spend or cap). */
+  offer?: Campaign;
 }

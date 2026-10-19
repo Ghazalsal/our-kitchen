@@ -70,6 +70,7 @@ export const enToAr: Record<string, string> = {
   "Live now": "متاح الآن",
   "Coming soon": "قريبًا",
   "hours": "ساعة",
+  "days": "يوم",
   "mins": "دقيقة",
   "secs": "ثانية",
   "ends in": "ينتهي خلال",
@@ -544,6 +545,54 @@ export const enToAr: Record<string, string> = {
   "A fresh verification link has been sent.": "تم إرسال رابط تأكيد جديد.",
   "If an account exists, a password reset link has been sent.": "إذا كان الحساب موجودًا، تم إرسال رابط إعادة تعيين كلمة المرور.",
   "Your password has been reset. You can now sign in.": "تمت إعادة تعيين كلمة مرورك. يمكنك الآن تسجيل الدخول.",
+  // Coupon and campaign offers
+  "Free delivery": "توصيل مجاني",
+  "Amount off (₪)": "قيمة الخصم (₪)",
+  "On orders over": "للطلبات فوق",
+  "Enter a discount greater than zero.": "أدخل قيمة خصم أكبر من صفر.",
+  "A percent discount cannot exceed 100%.": "لا يمكن أن تتجاوز نسبة الخصم 100%.",
+  // Coupon checks (shown as toasts in the cart and checkout)
+  "That kitchen code is not active.": "رمز الخصم هذا غير فعّال.",
+  "That kitchen code has expired.": "انتهت صلاحية رمز الخصم هذا.",
+  "That kitchen code has reached its limit.": "وصل رمز الخصم هذا إلى الحد الأقصى للاستخدام.",
+  "This code is reserved for a different kitchen collection.": "هذا الرمز مخصّص لمجموعة أخرى.",
+  "This code is reserved for a different kitchen tool.": "هذا الرمز مخصّص لمنتج آخر.",
+  // Storefront, checkout and atelier desk labels
+  "Sign in before the counter moves.": "سجّل الدخول قبل إتمام الطلب.",
+  "Sign in securely": "تسجيل دخول آمن",
+  "Sign out securely": "تسجيل خروج آمن",
+  "Signing in…": "جارٍ تسجيل الدخول…",
+  "Something went wrong.": "حدث خطأ ما.",
+  "Track your order": "تتبّع طلبك",
+  "Your account is ready.": "حسابك جاهز.",
+  "Collection library": "مكتبة المجموعات",
+  "Copper & Co. / Atelier desk": "كوبر آند كو / مكتب الورشة",
+  "The tool left the shelf.": "تمت إزالة المنتج.",
+  "Remove variant image": "إزالة صورة الخيار",
+  "Variant image stored in the application library.": "تم حفظ صورة الخيار في مكتبة التطبيق.",
+  "Delete": "حذف",
+  "Edit": "تعديل",
+  // Laravel messages surfaced through error toasts
+  "Administrator authorization is required.": "يتطلب هذا الإجراء صلاحيات المدير.",
+  "Cart ownership is required.": "لا يمكنك الوصول إلى هذه السلة.",
+  "Order ownership is required.": "لا يمكنك الوصول إلى هذا الطلب.",
+  "Enter a Palestinian mobile number, for example 059 123 4567 or +970 59 123 4567.": "أدخل رقم جوال فلسطيني، مثل 059 123 4567 أو ‎+970 59 123 4567.",
+  "Invalid verification link.": "رابط التأكيد غير صالح.",
+  "Media file was not found.": "لم يتم العثور على الملف.",
+  "One or more order products are unavailable.": "منتج واحد أو أكثر في طلبك غير متوفر.",
+  "Please sign in first.": "يرجى تسجيل الدخول أولًا.",
+  "Please sign in to continue.": "يرجى تسجيل الدخول للمتابعة.",
+  "Please wait before requesting another reset link.": "يرجى الانتظار قبل طلب رابط إعادة تعيين آخر.",
+  "Please wait before requesting another verification email.": "يرجى الانتظار قبل طلب رسالة تأكيد أخرى.",
+  "Select at least one campaign target.": "اختر هدفًا واحدًا على الأقل للحملة.",
+  "These credentials do not match our records.": "بيانات الدخول غير صحيحة.",
+  "Too many sign-in attempts. Please wait a minute and try again.": "محاولات تسجيل دخول كثيرة. انتظر دقيقة ثم حاول مرة أخرى.",
+  "Unable to establish a secure session.": "تعذّر إنشاء جلسة آمنة.",
+  "Unsupported image format.": "صيغة الصورة غير مدعومة.",
+  "Verify your email before placing an order.": "أكّد بريدك الإلكتروني قبل تقديم الطلب.",
+  "Specific collections": "مجموعات محددة",
+  "Specific products": "منتجات محددة",
+  "Choose at least one product or collection for this code.": "اختر منتجًا أو مجموعة واحدة على الأقل لهذا الرمز.",
 };
 
 export const arToEn: Record<string, string> = Object.fromEntries(Object.entries(enToAr).map(([english, arabic]) => [arabic, english]));
@@ -554,18 +603,45 @@ const patterns: Record<"en" | "ar", [RegExp, string][]> = {
   ar: [
     [/^New order (\S+) placed by (.+) for ₪([\d.,]+)\.$/, "طلب جديد $1 من $2 بقيمة ₪$3."],
     [/^(\S+) has been placed for ₪([\d.,]+)\.$/, "تم تقديم الطلب $1 بقيمة ₪$2."],
+    [/^Add (.+) more to use this code\.$/, "أضف $1 لاستخدام هذا الرمز."],
+    [/^Add (.+) to bag$/, "أضف $1 إلى السلة"],
+    [/^(.+) off$/, "خصم $1"],
   ],
   en: [
+    [/^خصم (.+)$/, "$1 off"],
     [/^طلب جديد (\S+) من (.+) بقيمة ₪([\d.,]+)\.$/, "New order $1 placed by $2 for ₪$3."],
     [/^تم تقديم الطلب (\S+) بقيمة ₪([\d.,]+)\.$/, "$1 has been placed for ₪$2."],
   ],
 };
 
-export function translateText(value: string, language: "en" | "ar") {
+// Laravel's built-in validation messages reach the customer through error toasts (register, sign-in, password reset).
+const fieldNames: Record<string, string> = { email: "البريد الإلكتروني", phone: "رقم الهاتف", password: "كلمة المرور", name: "الاسم", identifier: "البريد الإلكتروني أو رقم الهاتف", code: "الرمز", token: "الرمز" };
+const field = (name: string) => fieldNames[name.toLowerCase()] ?? name;
+const laravelMessages: [RegExp, (...groups: string[]) => string][] = [
+  [/^The (.+) field is required\.$/, (name) => `حقل ${field(name)} مطلوب.`],
+  [/^The (.+) has already been taken\.$/, (name) => `${field(name)} مستخدم بالفعل.`],
+  [/^The (.+) field must be a valid email address\.$/, () => "يرجى إدخال بريد إلكتروني صالح."],
+  [/^The (.+) field confirmation does not match\.$/, (name) => `تأكيد ${field(name)} غير مطابق.`],
+  [/^The (.+) field must be at least (\d+) characters\.$/, (name, count) => `يجب أن يتكون ${field(name)} من ${count} أحرف على الأقل.`],
+  [/^The (.+) field must not be greater than (\d+) characters\.$/, (name, count) => `يجب ألا يتجاوز ${field(name)} ${count} حرفًا.`],
+  [/^The (.+) field must contain at least one uppercase and one lowercase letter\.$/, (name) => `يجب أن يحتوي ${field(name)} على حرف كبير وحرف صغير على الأقل.`],
+  [/^The (.+) field must contain at least one symbol\.$/, (name) => `يجب أن يحتوي ${field(name)} على رمز واحد على الأقل.`],
+  [/^The (.+) field must contain at least one number\.$/, (name) => `يجب أن يحتوي ${field(name)} على رقم واحد على الأقل.`],
+  [/^The (.+) field must contain at least one letter\.$/, (name) => `يجب أن يحتوي ${field(name)} على حرف واحد على الأقل.`],
+];
+
+export function translateText(value: string, language: "en" | "ar"): string {
   const source = language === "ar" ? enToAr : arToEn;
   const trimmed = value.trim();
   const exact = source[trimmed];
   if (exact) return value.replace(trimmed, exact);
+  if (language === "ar") {
+    // Laravel appends "(and N more errors)" when a form has several problems.
+    const more = /^(.+?) \(and (\d+) more errors?\)$/.exec(trimmed);
+    if (more) return value.replace(trimmed, `${translateText(more[1], language)} (و${more[2]} أخطاء أخرى)`);
+    const laravel = laravelMessages.find(([regex]) => regex.test(trimmed));
+    if (laravel) return value.replace(trimmed, laravel[1](...trimmed.match(laravel[0])!.slice(1)));
+  }
   const pattern = patterns[language].find(([regex]) => regex.test(trimmed));
   if (pattern) return value.replace(trimmed, trimmed.replace(pattern[0], pattern[1]));
 

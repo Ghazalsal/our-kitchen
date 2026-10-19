@@ -1,8 +1,8 @@
 /** Copperline Atelier state: Laravel-backed commerce data with a small local cart cache for instant customer interactions. */
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { campaigns, coupons, categories, messages, notifications, orders, products } from "@/lib/seed";
-import type { Campaign, CampaignResult, CartLine, Category, Coupon, CouponResult, Order, OrderStatus, Product, StoreNotification, StoreState, ThreadMessage } from "@/lib/types";
-import { FREE_DELIVERY_THRESHOLD, formatILS } from "@/lib/money";
+import type { Campaign, CampaignResult, CartLine, CartTotals, Category, Coupon, CouponResult, FulfillmentMethod, Order, OrderStatus, Product, ProductPricing, StoreNotification, StoreState, ThreadMessage } from "@/lib/types";
+import { campaignFor, cartTotalsFor, couponFor, productPricingFor } from "@/lib/pricing";
 import { laravelRequest, useAuth } from "@/contexts/AuthContext";
 
 const STORE_KEY = "our-kitchen-copperline-v1";
@@ -24,6 +24,8 @@ type StoreContextValue = {
   setCouponCode: (code: string | null) => void;
   validateCoupon: (code: string | null, lines?: CartLine[]) => CouponResult;
   campaignResult: (lines?: CartLine[]) => CampaignResult;
+  cartTotals: (fulfillment?: FulfillmentMethod) => CartTotals;
+  productPricing: (product: Product) => ProductPricing;
   placeOrder: (details: Pick<Order, "customerName" | "customerEmail" | "address" | "fulfillment">) => Promise<Order | null>;
   updateOrderStatus: (orderId: string, status: OrderStatus) => void;
   sendMessage: (orderId: string, sender: "admin" | "customer", body: string) => void;
@@ -40,7 +42,6 @@ type StoreContextValue = {
 };
 
 const StoreContext = createContext<StoreContextValue | null>(null);
-const money = (value: number) => Math.round(value * 100) / 100;
 const api = async <T,>(path: string, method = "GET", body?: unknown): Promise<T | null> => {
   try { return await laravelRequest<T>(path, method, body); } catch (error) {
     console.warn("[Our Kitchen API]", error);
@@ -96,38 +97,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => { if (hydrated && cartId) void api(`/carts/${cartId}`, "PUT", { cart: state.cart, saveForLater: state.saveForLater, couponCode: state.couponCode }); }, [cartId, hydrated, state.cart, state.saveForLater, state.couponCode]);
 
   const cartSubtotal = useMemo(() => state.cart.reduce((sum, line) => sum + (state.products.find((item) => item.id === line.productId)?.price ?? 0) * line.quantity, 0), [state.cart, state.products]);
-  const validateCoupon = (code: string | null, lines = state.cart): CouponResult => {
-    if (!code) return { valid: true, message: "No coupon applied.", discount: 0, freeShipping: false };
-    const coupon = state.coupons.find((item) => item.code.toLowerCase() === code.toLowerCase());
-    const subtotal = lines.reduce((sum, line) => sum + (state.products.find((item) => item.id === line.productId)?.price ?? 0) * line.quantity, 0);
-    if (!coupon || !coupon.active) return { valid: false, message: "That kitchen code is not active.", discount: 0, freeShipping: false };
-    if (new Date(coupon.expiresAt) < new Date()) return { valid: false, message: "That kitchen code has expired.", discount: 0, freeShipping: false };
-    if (coupon.usageLimit && coupon.uses >= coupon.usageLimit) return { valid: false, message: "That kitchen code has reached its limit.", discount: 0, freeShipping: false };
-    if (subtotal < coupon.minSpend) return { valid: false, message: `Add ${formatILS(coupon.minSpend - subtotal)} more to use this code.`, discount: 0, freeShipping: false };
-    if (coupon.categoryIds?.length && lines.some((line) => !coupon.categoryIds?.includes(state.products.find((item) => item.id === line.productId)?.categoryId ?? ""))) return { valid: false, message: "This code is reserved for a different kitchen collection.", discount: 0, freeShipping: false };
-    if (coupon.productIds?.length && lines.some((line) => !coupon.productIds?.includes(line.productId))) return { valid: false, message: "This code is reserved for a different kitchen tool.", discount: 0, freeShipping: false };
-    const discount = coupon.type === "percent" ? Math.min(subtotal * (coupon.value / 100), coupon.maxDiscount ?? Infinity) : coupon.type === "fixed" ? coupon.value : 0;
-    return { valid: true, message: coupon.type === "free_shipping" ? "Delivery is on us." : "Discount applied to this order.", discount: money(discount), freeShipping: coupon.type === "free_shipping" };
-  };
-  const campaignResult = (lines = state.cart): CampaignResult => {
-    const now = Date.now();
-    const active = state.campaigns.filter((campaign) => campaign.enabled && new Date(campaign.startsAt).getTime() <= now && new Date(campaign.endsAt).getTime() > now).sort((a, b) => b.priority - a.priority);
-    for (const campaign of active) {
-      const eligibleLines = lines.filter((line) => {
-        const product = state.products.find((item) => item.id === line.productId);
-        if (!product) return false;
-        return campaign.targetType === "all" || (campaign.targetType === "brand" && campaign.targetValues.includes(product.brand)) || (campaign.targetType === "categories" && campaign.targetValues.includes(product.categoryId));
-      });
-      const eligibleSubtotal = eligibleLines.reduce((sum, line) => sum + (state.products.find((item) => item.id === line.productId)?.price ?? 0) * line.quantity, 0);
-      if (!eligibleLines.length || eligibleSubtotal < campaign.minSpend) continue;
-      const discount = campaign.type === "percent" ? Math.min(eligibleSubtotal * (campaign.value / 100), campaign.maxDiscount ?? Infinity) : campaign.type === "fixed" ? Math.min(campaign.value, eligibleSubtotal) : 0;
-      return { campaign, eligibleSubtotal: money(eligibleSubtotal), discount: money(discount), freeShipping: campaign.type === "free_shipping" };
-    }
-    return { campaign: null, eligibleSubtotal: 0, discount: 0, freeShipping: false };
-  };
+  const catalog = { products: state.products, campaigns: state.campaigns, coupons: state.coupons };
+  // Pricing rules live in @/lib/pricing so the cart, checkout, product cards and tests share them; StoreApiController mirrors them.
+  const validateCoupon = (code: string | null, lines = state.cart): CouponResult => couponFor(code, lines, catalog);
+  const campaignResult = (lines = state.cart): CampaignResult => campaignFor(lines, catalog);
+  const cartTotals = (fulfillment: FulfillmentMethod = "delivery"): CartTotals => cartTotalsFor(state.cart, state.couponCode, catalog, fulfillment);
+  const productPricing = (product: Product): ProductPricing => productPricingFor(product, state.campaigns);
 
   const value: StoreContextValue = {
-    state, cartCount: state.cart.reduce((sum, line) => sum + line.quantity, 0), cartSubtotal, validateCoupon, campaignResult,
+    state, cartCount: state.cart.reduce((sum, line) => sum + line.quantity, 0), cartSubtotal, validateCoupon, campaignResult, cartTotals, productPricing,
     addToCart: (productId, color, size = "", quantity = 1) => setState((current) => { const existing = current.cart.find((line) => line.productId === productId && line.color === color && line.size === size); return { ...current, cart: existing ? current.cart.map((line) => line === existing ? { ...line, quantity: line.quantity + quantity } : line) : [...current.cart, { productId, color, size, quantity }] }; }),
     updateQuantity: (productId, color, size, quantity) => setState((current) => ({ ...current, cart: quantity <= 0 ? current.cart.filter((line) => line.productId !== productId || line.color !== color || line.size !== size) : current.cart.map((line) => line.productId === productId && line.color === color && line.size === size ? { ...line, quantity } : line) })),
     removeFromCart: (productId, color, size) => setState((current) => ({ ...current, cart: current.cart.filter((line) => line.productId !== productId || line.color !== color || line.size !== size) })),
@@ -153,8 +131,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setCouponCode: (couponCode) => setState((current) => ({ ...current, couponCode })),
     placeOrder: async (details) => {
       if (!user || !state.cart.length) return null;
-      const couponResult = validateCoupon(state.couponCode); const activeCampaign = campaignResult(); const discount = (couponResult.valid ? couponResult.discount : 0) + activeCampaign.discount; const shipping = details.fulfillment === "pickup" || couponResult.freeShipping || activeCampaign.freeShipping || cartSubtotal >= FREE_DELIVERY_THRESHOLD ? 0 : 18; const id = `CK-${String(Date.now()).slice(-6)}`;
-      const order: Order & { campaignId?: string } = { id, createdAt: new Date().toISOString(), status: "placed", lines: state.cart.map((line) => { const product = state.products.find((item) => item.id === line.productId)!; return { ...line, name: product.name, price: product.price, image: product.image }; }), subtotal: cartSubtotal, discount, shipping, total: money(cartSubtotal - discount + shipping), couponCode: couponResult.valid ? state.couponCode ?? undefined : undefined, campaignId: activeCampaign.campaign?.id, ...details };
+      const { coupon: couponResult, campaign: activeCampaign, discount, shipping, total } = cartTotals(details.fulfillment); const id = `CK-${String(Date.now()).slice(-6)}`;
+      const order: Order & { campaignId?: string } = { id, createdAt: new Date().toISOString(), status: "placed", lines: state.cart.map((line) => { const product = state.products.find((item) => item.id === line.productId)!; return { ...line, name: product.name, price: product.price, image: product.image }; }), subtotal: cartSubtotal, discount, shipping, total, couponCode: couponResult.valid ? state.couponCode ?? undefined : undefined, campaignId: activeCampaign.campaign?.id, ...details };
       const confirmed = await laravelRequest<Order>("/orders", "POST", { order });
       setState((current) => ({ ...current, orders: [confirmed, ...current.orders.filter((existing) => existing.id !== confirmed.id)], cart: [], couponCode: null }));
       return confirmed;
